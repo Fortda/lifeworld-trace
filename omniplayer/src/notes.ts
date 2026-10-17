@@ -127,7 +127,18 @@ import {
   paintComposerTape,
   resetLiveGlyphs,
   snapshotGlyphsForSend,
+  composerSemanticText,
 } from "./notes_color_temp";
+import {
+  closeSendKeyPopover,
+  initSendKeyUi,
+  isComposerSendHotkey,
+} from "./notes_composer_send";
+import {
+  closeComposerMdEditor,
+  initComposerMdEditor,
+  isComposerMdEditorOpen,
+} from "./notes_composer_md";
 import { initNotesAistudioImport } from "./notes_import";
 import type { ResearchMeta } from "./notes_research";
 import {
@@ -185,7 +196,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 
 const MODELS_STALE_MS = 24 * 60 * 60 * 1000;
-const NOTES_MODE_KEY = "omnitrace.notes.mode";
+const NOTES_MODE_KEY = "lifeworldtrace.notes.mode";
 
 type NotesMode = "stream" | "clue" | "timeline";
 
@@ -197,7 +208,7 @@ let sidecarEnsurePromise: Promise<LlmSidecarStatus> | null = null;
 let currentModelKey = "";
 const NONE_MODEL_KEY = "none";
 let cards: NotesCardSummary[] = [];
-const HIDE_NON_GREEN_KEY = "omnitrace.notes.hideNonGreen";
+const HIDE_NON_GREEN_KEY = "lifeworldtrace.notes.hideNonGreen";
 let chatAppsHosted = false;
 
 export function setChatAppsHosted(v: boolean) {
@@ -1696,6 +1707,37 @@ function positionModelPopover() {
   if (pane && !pane.classList.contains("hidden")) positionModelDetailPane();
 }
 
+/** 服务商折叠动画（CSS ~0.35s）期间跟着改尺寸/贴锚，结束再落一次。 */
+let modelPopoverRefitRaf = 0;
+function scheduleModelPopoverRefit(body?: HTMLElement) {
+  if (!modelPopoverOpen) return;
+  if (modelPopoverRefitRaf) {
+    cancelAnimationFrame(modelPopoverRefitRaf);
+    modelPopoverRefitRaf = 0;
+  }
+  positionModelPopover();
+  const start = performance.now();
+  const durationMs = 380;
+  const tick = (now: number) => {
+    modelPopoverRefitRaf = 0;
+    if (!modelPopoverOpen) return;
+    positionModelPopover();
+    if (now - start < durationMs) {
+      modelPopoverRefitRaf = requestAnimationFrame(tick);
+    }
+  };
+  modelPopoverRefitRaf = requestAnimationFrame(tick);
+  if (body) {
+    const onEnd = (ev: TransitionEvent) => {
+      if (ev.target !== body) return;
+      if (ev.propertyName !== "grid-template-rows") return;
+      body.removeEventListener("transitionend", onEnd);
+      if (modelPopoverOpen) positionModelPopover();
+    };
+    body.addEventListener("transitionend", onEnd);
+  }
+}
+
 function closeModelSheet() {
   closeModelEditor();
   const pop = $("notes-model-popover");
@@ -1705,6 +1747,10 @@ function closeModelSheet() {
   }
   hideModelDetailPane();
   modelPopoverOpen = false;
+  if (modelPopoverRefitRaf) {
+    cancelAnimationFrame(modelPopoverRefitRaf);
+    modelPopoverRefitRaf = 0;
+  }
   $("notes-model-btn")?.setAttribute("aria-expanded", "false");
   hideFloat(pop);
   setPickerStatus("");
@@ -2061,6 +2107,7 @@ function buildProviderGroup(
     toggle.setAttribute("aria-expanded", nowCollapsed ? "false" : "true");
     if (nowCollapsed) providerCollapsed.add(p.id);
     else providerCollapsed.delete(p.id);
+    scheduleModelPopoverRefit(body);
   });
   wrap.appendChild(toggle);
   wrap.appendChild(body);
@@ -2213,10 +2260,11 @@ function syncComposerHint() {
 }
 
 async function handleSend() {
+  if (isComposerMdEditorOpen()) closeComposerMdEditor();
   const input = $("notes-input") as HTMLTextAreaElement | null;
   const sendBtn = $("notes-send") as HTMLButtonElement | null;
   if (!input || !sendBtn) return;
-  const text = input.value.trim();
+  const text = composerSemanticText().trim();
   const imagePaths = getComposerImagePaths();
   if (!text && !imagePaths.length) return;
   const userGlyphs = snapshotGlyphsForSend(text);
@@ -2386,6 +2434,18 @@ export function initNotes() {
       repaintClueGlyphFields();
     },
   });
+  initSendKeyUi();
+  initComposerMdEditor({
+    getText: () => composerSemanticText(),
+    setText: (text) => {
+      const input = $("notes-input") as HTMLTextAreaElement | null;
+      if (!input) return;
+      input.value = text;
+      onComposerInput();
+      autoGrowNotesInput();
+    },
+    send: () => void handleSend(),
+  });
   initLlmSettingsHost({
     isBusy: () => progressBusy,
     setBusy: (v) => {
@@ -2401,7 +2461,7 @@ export function initNotes() {
   initModelEditor({
     onAddProvider: () => {
       closeModelSheet();
-      window.dispatchEvent(new CustomEvent("omnitrace-open-llm-settings"));
+      window.dispatchEvent(new CustomEvent("lifeworld_trace-open-llm-settings"));
     },
   });
   onProvidersChanged((pf) => {
@@ -2417,8 +2477,7 @@ export function initNotes() {
   syncRunPrefUi();
   $("notes-send")?.addEventListener("click", () => void handleSend());
   $("notes-input")?.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter") return;
-    if (e.shiftKey || e.ctrlKey || e.metaKey) return;
+    if (!isComposerSendHotkey(e)) return;
     e.preventDefault();
     void handleSend();
   });
@@ -2433,6 +2492,11 @@ export function initNotes() {
   });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    if (isComposerMdEditorOpen()) {
+      closeComposerMdEditor();
+      return;
+    }
+    closeSendKeyPopover();
     if (isModelEditorOpen()) {
       closeModelEditor();
       return;
@@ -2450,7 +2514,7 @@ export function initNotes() {
   });
   $("notes-add-api")?.addEventListener("click", () => {
     closeModelSheet();
-    window.dispatchEvent(new CustomEvent("omnitrace-open-llm-settings"));
+    window.dispatchEvent(new CustomEvent("lifeworld_trace-open-llm-settings"));
   });
   $("notes-refresh-models")?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -2560,7 +2624,7 @@ export function initNotes() {
   });
 
   autoGrowNotesInput();
-  window.addEventListener("omnitrace-lang", () => refreshCardRelativeTimes());
+  window.addEventListener("lifeworld_trace-lang", () => refreshCardRelativeTimes());
   window.addEventListener(COST_DISPLAY_EVENT, () => {
     for (const c of cards) {
       const btn = document.querySelector(
@@ -2676,6 +2740,8 @@ export function leaveNotesPage() {
   closeMcpPopoverOnLeave();
   closeForwarderPopoverOnLeave();
   closeColorTempPopoverOnLeave();
+  closeSendKeyPopover();
+  closeComposerMdEditor({ discard: false });
   closeComposerAttachPopover();
   closeLogDrawer();
   cancelWireDrag();

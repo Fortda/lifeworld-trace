@@ -139,6 +139,12 @@ export const CLUE_HISTORY_LABELS = {
     en: "Paste notes",
     action: "paste_nodes",
   },
+  cut: {
+    key: "notes.clue.history.cut",
+    zh: "剪切便签",
+    en: "Cut notes",
+    action: "cut_nodes",
+  },
   rollback: {
     key: "notes.clue.history.rollback",
     zh: "回退版本",
@@ -570,4 +576,61 @@ export function bindClueHistoryUi() {
 
 export function refreshClueHistoryUi() {
   updateHistoryUi();
+}
+
+export type ClueHistoryActivityItem = {
+  seq: number;
+  ts: number;
+  actor: string;
+  actorLabel: string;
+  label: string;
+};
+
+/**
+ * Recent content-history steps for hover / summary UI.
+ * Uses in-memory cache when present; otherwise `notes_clue_history_list`.
+ * Only returns metadata (no snapshots) — last `limit` entries, newest last.
+ */
+export async function fetchClueHistoryActivity(
+  boardId: string,
+  limit = 8
+): Promise<ClueHistoryActivityItem[]> {
+  const bid = boardId.trim();
+  if (!bid || limit <= 0) return [];
+
+  let entries: PersistedEntry[] = [];
+  const cached = boardHistories.get(bid);
+  if (cached?.entries?.length) {
+    entries = cached.entries;
+  } else {
+    try {
+      const list = await invoke<{
+        entries?: PersistedEntry[];
+      }>("notes_clue_history_list", { boardId: bid });
+      entries = (list.entries ?? []).filter((e) => !isNavigationHistoryEntry(e));
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
+
+  const slice = entries.slice(-limit);
+  return slice.map((e) => {
+    let text = historyLabelText(labelForEntry(e));
+    if (e.rollback_to_seq != null) {
+      text = `${text} → #${e.rollback_to_seq}`;
+    }
+    return {
+      seq: e.seq,
+      ts: e.ts,
+      actor: e.actor,
+      actorLabel: actorLabel(e.actor),
+      label: text,
+    };
+  });
+}
+
+/** Compact absolute time for activity rows (same style as the history panel). */
+export function formatClueHistoryActivityTime(ts: number): string {
+  return formatHistoryTime(ts);
 }

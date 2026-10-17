@@ -1,8 +1,8 @@
 {
-  "name": "@omnitrace/mcp-clue-board",
+  "name": "@lifeworld_trace/mcp-clue-board",
   "version": "0.1.0",
   "private": true,
-  "description": "MCP server for Liuhen (留痕) clue boards",
+  "description": "MCP server for Lifeworld Trace (留痕) clue boards",
   "type": "module",
   "bin": {
     "mcp-clue-board": "./dist/index.js"

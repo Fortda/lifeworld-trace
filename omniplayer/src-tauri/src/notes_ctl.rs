@@ -875,16 +875,34 @@ pub struct WireContextInput {
     pub wire_preset_created_at: Option<u64>,
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct McpTurnOpts {
     #[serde(default)]
     pub inject_product_context: bool,
+    #[serde(default = "default_true_ts")]
+    pub inject_history_timestamps: bool,
     #[serde(default)]
     pub enabled_server_ids: Vec<String>,
     #[serde(default)]
     pub viewing_clue_board: bool,
     #[serde(default)]
     pub active_board_id: Option<String>,
+}
+
+fn default_true_ts() -> bool {
+    true
+}
+
+impl Default for McpTurnOpts {
+    fn default() -> Self {
+        Self {
+            inject_product_context: false,
+            inject_history_timestamps: true,
+            enabled_server_ids: Vec::new(),
+            viewing_clue_board: false,
+            active_board_id: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Default)]
@@ -2263,6 +2281,7 @@ fn build_chat_messages(
     history: Option<Vec<ChatTurnMessage>>,
     system: Option<&str>,
     user_images: Option<&[String]>,
+    inject_history_timestamps: bool,
 ) -> Vec<Value> {
     let mut out = Vec::new();
     if let Some(s) = system {
@@ -2279,10 +2298,12 @@ fn build_chat_messages(
             let tb = b.1.created_at.unwrap_or(0);
             ta.cmp(&tb).then_with(|| a.0.cmp(&b.0))
         });
-        if let Some(ts_note) = history_timestamps_system_message(
-            &indexed.iter().map(|(_, m)| m).collect::<Vec<_>>(),
-        ) {
-            out.push(json!({ "role": "system", "content": ts_note }));
+        if inject_history_timestamps {
+            if let Some(ts_note) = history_timestamps_system_message(
+                &indexed.iter().map(|(_, m)| m).collect::<Vec<_>>(),
+            ) {
+                out.push(json!({ "role": "system", "content": ts_note }));
+            }
         }
         for (_, m) in indexed {
             let role = m.role.trim();
@@ -2344,6 +2365,7 @@ fn mcp_prefs_from_turn(opts: &NotesTurnOpts) -> McpPrefs {
     let mut prefs = notes_mcp::load_mcp_prefs();
     if let Some(m) = opts.mcp.as_ref() {
         prefs.inject_product_context = m.inject_product_context;
+        prefs.inject_history_timestamps = m.inject_history_timestamps;
         let enabled: std::collections::HashSet<_> =
             m.enabled_server_ids.iter().cloned().collect();
         for s in &mut prefs.servers {
@@ -2574,6 +2596,7 @@ pub async fn notes_send_turn(
         history,
         system.as_deref(),
         Some(&user_images),
+        mcp_prefs.inject_history_timestamps,
     );
     tauri::async_runtime::spawn(async move {
         if let Err(e) = run_turn_stream(app2.clone(), card, messages, model, opts, mcp_prefs).await {

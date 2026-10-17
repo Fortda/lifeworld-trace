@@ -1,15 +1,15 @@
-# Install the unzipped Liuhen (留痕) folder for the current Windows user.
-# Programs: %LOCALAPPDATA%\OmniTrace  (folder name unchanged for compatibility)
-# Data:     %USERPROFILE%\OmniTrace\OmniDatabase  (created if missing)
+# Install the unzipped Lifeworld Trace (留痕) folder for the current Windows user.
+# Programs: %LOCALAPPDATA%\LifeworldTrace  (folder name unchanged for compatibility)
+# Data:     %USERPROFILE%\LifeworldTrace\OmniDatabase  (created if missing)
 # Uninstall does not delete the data folder.
 $ErrorActionPreference = "Stop"
 
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$InstallDir = Join-Path $env:LOCALAPPDATA "OmniTrace"
+$InstallDir = Join-Path $env:LOCALAPPDATA "LifeworldTrace"
 $IncomingDir = Join-Path $InstallDir "incoming"
-$DataRoot = Join-Path $env:USERPROFILE (Join-Path "OmniTrace" "OmniDatabase")
+$DataRoot = Join-Path $env:USERPROFILE (Join-Path "LifeworldTrace" "OmniDatabase")
 $ExeSrc = Join-Path $Here "OmniPlayer.exe"
-$RecSrc = Join-Path $Here "omnitrace_input.exe"
+$RecSrc = Join-Path $Here "lifeworld_trace_input.exe"
 
 if (-not (Test-Path -LiteralPath $ExeSrc)) {
   Write-Error "OmniPlayer.exe not found next to this script. Unzip the whole folder first."
@@ -73,15 +73,15 @@ function New-Shortcut([string]$LinkPath, [string]$Target, [string]$WorkDir) {
   $sc.TargetPath = $Target
   $sc.WorkingDirectory = $WorkDir
   $sc.Description = "留痕"
-  $ico = Join-Path $WorkDir "OmniTrace.ico"
+  $ico = Join-Path $WorkDir "LifeworldTrace.ico"
   if (Test-Path -LiteralPath $ico) { $sc.IconLocation = "$ico,0" }
   $sc.Save()
 }
 
 $desk = Join-Path ([Environment]::GetFolderPath("Desktop")) "留痕.lnk"
-$deskLegacy = Join-Path ([Environment]::GetFolderPath("Desktop")) "OmniTrace.lnk"
+$deskLegacy = Join-Path ([Environment]::GetFolderPath("Desktop")) "LifeworldTrace.lnk"
 $startDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\留痕"
-$startLegacy = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\OmniTrace"
+$startLegacy = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\LifeworldTrace"
 $startLink = Join-Path $startDir "留痕.lnk"
 $exe = Join-Path $InstallDir "OmniPlayer.exe"
 Remove-Item $deskLegacy -Force -ErrorAction SilentlyContinue
@@ -97,7 +97,7 @@ $uninstLines = @(
   ('$deskLegacy = ''' + $deskLegacy + ''''),
   ('$startDir = ''' + $startDir + ''''),
   ('$startLegacy = ''' + $startLegacy + ''''),
-  '$key = ''HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OmniTrace''',
+  '$key = ''HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LifeworldTrace''',
   'Remove-Item $desk -Force -ErrorAction SilentlyContinue',
   'Remove-Item $deskLegacy -Force -ErrorAction SilentlyContinue',
   'Remove-Item $startDir -Recurse -Force -ErrorAction SilentlyContinue',
@@ -111,7 +111,7 @@ $utf8 = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText($uninst, ($uninstLines -join "`r`n") + "`r`n", $utf8)
 
 $uninstCmd = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + $uninst + '"'
-$key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OmniTrace"
+$key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LifeworldTrace"
 New-Item -Path $key -Force | Out-Null
 New-ItemProperty -Path $key -Name "DisplayName" -Value "留痕" -PropertyType String -Force | Out-Null
 New-ItemProperty -Path $key -Name "DisplayVersion" -Value $version -PropertyType String -Force | Out-Null
@@ -122,7 +122,7 @@ New-ItemProperty -Path $key -Name "NoModify" -Value 1 -PropertyType DWord -Force
 New-ItemProperty -Path $key -Name "NoRepair" -Value 1 -PropertyType DWord -Force | Out-Null
 
 if (-not (Test-Path -LiteralPath $RecSrc)) {
-  Write-Warning "omnitrace_input.exe was missing from the zip; recording may not start."
+  Write-Warning "lifeworld_trace_input.exe was missing from the zip; recording may not start."
 }
 
 Write-Host ""

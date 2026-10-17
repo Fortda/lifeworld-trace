@@ -27,7 +27,7 @@ const HEARTBEAT_STALE_MS: u64 = 5000;
 pub struct RecorderStatus {
     pub running: bool,
     pub pid: Option<u32>,
-    /// 检测到的 omnitrace_input.exe 进程数（>1 说明异常多开）
+    /// 检测到的 lifeworld_trace_input.exe 进程数（>1 说明异常多开）
     pub instances: u32,
     pub exe: Option<String>,
     pub repo_root: Option<String>,
@@ -42,7 +42,7 @@ fn repo_root() -> Option<PathBuf> {
         let cargo = dir.join("Cargo.toml");
         if cargo.is_file() {
             if let Ok(s) = fs::read_to_string(&cargo) {
-                if s.contains("name = \"omnitrace_input\"") {
+                if s.contains("name = \"lifeworld_trace_input\"") {
                     return Some(dir);
                 }
             }
@@ -65,15 +65,16 @@ fn recorder_work_dir(data_root: &Path) -> PathBuf {
     }
 }
 
-/// 稳定版：OmniPlayer.exe 旁的 omnitrace_input.exe（存在则禁止再 cargo）。
+/// 稳定版：OmniPlayer.exe 旁的采集 exe（新名优先；旧 `omnitrace_input.exe` 仍认）。
 fn bundled_recorder_exe() -> Option<PathBuf> {
     let dir = crate::current_exe_dir()?;
-    let cand = dir.join("omnitrace_input.exe");
-    if cand.is_file() {
-        Some(cand)
-    } else {
-        None
+    for name in ["lifeworld_trace_input.exe", "omnitrace_input.exe"] {
+        let cand = dir.join(name);
+        if cand.is_file() {
+            return Some(cand);
+        }
     }
+    None
 }
 
 fn now_ms() -> u64 {
@@ -182,7 +183,7 @@ fn autostart_lnk_path() -> Option<PathBuf> {
             .join("Start Menu")
             .join("Programs")
             .join("Startup")
-            .join("OmniTrace-WinRecorder.lnk"),
+            .join("LifeworldTrace-WinRecorder.lnk"),
     )
 }
 
@@ -229,8 +230,8 @@ fn read_live_pid(data_root: &Path) -> Option<u32> {
 
 fn find_recorder_exe(root: &Path) -> Option<PathBuf> {
     let candidates = [
-        root.join("target/release/omnitrace_input.exe"),
-        root.join("target/debug/omnitrace_input.exe"),
+        root.join("target/release/lifeworld_trace_input.exe"),
+        root.join("target/debug/lifeworld_trace_input.exe"),
     ];
     candidates.into_iter().find(|p| p.is_file())
 }
@@ -243,7 +244,7 @@ fn ensure_built(root: &Path) -> Result<PathBuf, String> {
     let mut cmd = Command::new("cargo");
     cmd.current_dir(root)
         .env("CARGO_TARGET_DIR", &target_dir)
-        .args(["build", "--bin", "omnitrace_input"])
+        .args(["build", "--bin", "lifeworld_trace_input"])
         .stdout(Stdio::null())
         .stderr(Stdio::piped());
     #[cfg(windows)]
@@ -269,7 +270,7 @@ fn count_recorder_instances(data_root: &Path) -> u32 {
         let out = Command::new("tasklist")
             .args([
                 "/FI",
-                "IMAGENAME eq omnitrace_input.exe",
+                "IMAGENAME eq lifeworld_trace_input.exe",
                 "/FO",
                 "CSV",
                 "/NH",
@@ -279,7 +280,7 @@ fn count_recorder_instances(data_root: &Path) -> u32 {
         out.map(|o| {
             let t = String::from_utf8_lossy(&o.stdout).to_ascii_lowercase();
             t.lines()
-                .filter(|l| l.contains("omnitrace_input.exe"))
+                .filter(|l| l.contains("lifeworld_trace_input.exe"))
                 .count() as u32
         })
         .unwrap_or(0)
@@ -322,7 +323,7 @@ fn count_recorder_instances_toolhelp() -> u32 {
                     .position(|&c| c == 0)
                     .unwrap_or(entry.szExeFile.len());
                 let name = String::from_utf16_lossy(&entry.szExeFile[..end]).to_ascii_lowercase();
-                if name == "omnitrace_input.exe" {
+                if name == "lifeworld_trace_input.exe" {
                     n += 1;
                 }
                 if Process32NextW(snap, &mut entry).is_err() {
@@ -337,7 +338,7 @@ fn count_recorder_instances_toolhelp() -> u32 {
 
 fn kill_all_recorders(data_root: &Path) {
     let _ = Command::new("taskkill")
-        .args(["/IM", "omnitrace_input.exe", "/T", "/F"])
+        .args(["/IM", "lifeworld_trace_input.exe", "/T", "/F"])
         .status();
     let _ = fs::remove_file(pid_path(data_root));
     std::thread::sleep(std::time::Duration::from_millis(350));
@@ -443,7 +444,7 @@ fn start_recorder(data_root: &Path) -> Result<(), String> {
         let work = recorder_work_dir(data_root);
         return spawn_recorder_process(&exe, &work, data_root);
     }
-    let root = repo_root().ok_or("找不到项目根目录（Cargo.toml / omnitrace_input）")?;
+    let root = repo_root().ok_or("找不到项目根目录（Cargo.toml / lifeworld_trace_input）")?;
     let exe = ensure_built(&root)?;
     spawn_recorder_process(&exe, &root, data_root)
 }

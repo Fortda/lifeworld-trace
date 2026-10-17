@@ -60,11 +60,11 @@ export function normalizeClueImageRef(
 
 export function encodeClueClipboardHtml(payload: ClueClipboardPayload): string {
   const b64 = utf8ToB64(JSON.stringify(payload));
-  return `<div data-omnitrace-clue="${b64}"></div>`;
+  return `<div data-lifeworld_trace-clue="${b64}"></div>`;
 }
 
 export function decodeClueClipboardHtml(html: string): ClueClipboardPayload | null {
-  const m = html.match(/data-omnitrace-clue=["']([A-Za-z0-9+/=]+)["']/);
+  const m = html.match(/data-lifeworld_trace-clue=["']([A-Za-z0-9+/=]+)["']/);
   if (!m?.[1]) return null;
   try {
     const parsed = JSON.parse(b64ToUtf8(m[1])) as ClueClipboardPayload;
@@ -151,14 +151,16 @@ export type ClueShortcutAction =
   | "ignore"
   | "browser-text"
   | "copy-notes"
+  | "cut-notes"
   | "paste-board"
   | "paste-field";
 
 /**
  * Ctrl/Cmd+C copies selected notes unless a text field has a character selection
- * (then the browser copies that text). Ctrl/Cmd+V: board paste when not in a field;
- * in a field, keydown arms a paste-field fallback (image attach) while the `paste`
- * event prefers clipboard image on the focused note, else normal text paste.
+ * (then the browser copies that text). Ctrl/Cmd+X cuts the same way (selection → notes).
+ * Ctrl/Cmd+V: board paste when not in a field; in a field, keydown arms a paste-field
+ * fallback (image attach) while the `paste` event prefers clipboard image on the
+ * focused note, else normal text paste.
  */
 export function clueShortcutAction(opts: {
   clueMode: boolean;
@@ -170,9 +172,9 @@ export function clueShortcutAction(opts: {
 }): ClueShortcutAction {
   if (!opts.clueMode || !opts.mod) return "ignore";
   const key = opts.key.toLowerCase();
-  if (key === "c") {
+  if (key === "c" || key === "x") {
     if (opts.fieldFocused && opts.fieldHasCharSelection) return "browser-text";
-    if (opts.selectedNoteCount > 0) return "copy-notes";
+    if (opts.selectedNoteCount > 0) return key === "x" ? "cut-notes" : "copy-notes";
     return "ignore";
   }
   if (key === "v") {

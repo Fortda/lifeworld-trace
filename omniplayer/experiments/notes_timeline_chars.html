@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 打开：在 omniplayer/ 下 `npm run dev` → http://127.0.0.1:1420/experiments/notes_timeline_chars.html -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>实验 · 笔记字迹时间轴</title>
+    <style>
+      :root {
+        --bg: #f3f1ec;
+        --panel: #faf8f4;
+        --ink: #2a2926;
+        --muted: #6e6a62;
+        --line: #cfc8bc;
+        --axis: #8a8478;
+        --accent: #2f6f5e;
+        --upper: #2f6f5e;
+        --lower: #b35a2e;
+        --mid: #3d3a34;
+        --focus: #3a7a68;
+        --key: #5b6ea6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--ink);
+        font: 14px/1.45 "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+      header {
+        padding: 16px 20px 8px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+      header h1 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: 0.01em;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        max-width: 72rem;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 20px;
+        border-bottom: 1px solid var(--line);
+        background: #f7f5f0;
+      }
+      .toolbar label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex: 1 1 280px;
+        min-width: 220px;
+      }
+      .toolbar input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+      }
+      .toolbar input[type="text"]:focus {
+        outline: 2px solid color-mix(in srgb, var(--focus) 45%, transparent);
+        border-color: var(--focus);
+      }
+      .toolbar select {
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+        max-width: min(420px, 100%);
+      }
+      .btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      button {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        border-radius: 6px;
+        padding: 7px 11px;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #b0a998;
+        background: #fffcf7;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      button.is-on {
+        border-color: color-mix(in srgb, var(--key) 45%, var(--line));
+        background: color-mix(in srgb, var(--key) 12%, #fff);
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        padding: 12px 20px 16px;
+        gap: 10px;
+      }
+      .stage {
+        flex: 1;
+        min-height: 280px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        overflow: hidden;
+        position: relative;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+        touch-action: none;
+      }
+      canvas.panning {
+        cursor: grabbing;
+      }
+      .legend {
+        display: grid;
+        gap: 6px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f7f5f0;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      .legend strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .swatch {
+        display: inline-block;
+        width: 0.7em;
+        height: 0.7em;
+        border-radius: 2px;
+        margin-right: 4px;
+        vertical-align: -1px;
+      }
+      .swatch.upper {
+        background: var(--upper);
+      }
+      .swatch.lower {
+        background: var(--lower);
+      }
+      .swatch.mid {
+        background: var(--mid);
+      }
+      .swatch.key {
+        background: var(--key);
+      }
+      kbd {
+        font: 11px/1 "Cascadia Mono", Consolas, monospace;
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 1px 5px;
+        background: #fff;
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>实验 · 笔记字迹时间轴</h1>
+      <p>
+        独立原型，尚未接入正式笔记页。每个字的<strong>中心</strong>落在「打进输入框」的时间戳上。
+        缩放 / 平移 / 刻度复用仪表盘算法（<code>time_view_nav</code> + <code>time_axis</code>）。
+        素材来自本机 <code>OmniDatabase/notes/cards</code> 的 <code>user_glyphs</code>，并叠画同日
+        <code>trace_DD.bin</code> 键盘按下（0xFC）。
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <label>
+        试打
+        <input
+          id="type-input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="也可在此继续打字，每个键都会打时间戳…"
+        />
+      </label>
+      <select id="sample-select" aria-label="素材会话"></select>
+      <div class="btns">
+        <button type="button" id="btn-load-sample">加载素材</button>
+        <button type="button" id="btn-toggle-keys" class="is-on" title="显示键盘按下信号">键盘信号</button>
+        <button type="button" id="btn-zoom-in" title="相当于 Alt+滚轮放大">放大</button>
+        <button type="button" id="btn-zoom-out">缩小</button>
+        <button type="button" id="btn-fit">适配字迹</button>
+        <button type="button" id="btn-clear">清空</button>
+      </div>
+      <span class="meta" id="view-meta">—</span>
+    </div>
+
+    <main>
+      <div class="stage">
+        <canvas id="timeline" aria-label="字迹时间轴画布"></canvas>
+      </div>
+      <div class="legend">
+        <div>
+          <strong>重叠换行（左上 / 右下，可多行）：</strong>
+          不撞的字贴在轴上。一撞就把左边字抬到上半行、右边字落到下半行；长串继续左右交替。
+          同一圈两侧都满了就扩到外圈（±2、±3…）。
+        </div>
+        <div>
+          <strong>竖直居中：</strong>
+          每一段重叠堆叠的上沿到下沿中点始终落在时间轴上；打字或缩放改行数时每帧重算。
+          <span class="swatch upper"></span>轴上 ·
+          <span class="swatch mid"></span>居中 ·
+          <span class="swatch lower"></span>轴下。
+        </div>
+        <div>
+          <strong>素材 / 信号：</strong>
+          字用笔记色温字形带的入框时间（缺绝对 <code>ts</code> 时用 <code>dt_ms</code> 累加重建）。
+          <span class="swatch key"></span>淡紫竖线 = 同时间窗内 bin 的键盘按下，便于对照「有没有在打字」。
+        </div>
+        <div>
+          <strong>操作：</strong>滚轮平移 · <kbd>Alt</kbd>+滚轮在光标处缩放 · 按住拖约 100ms 后平移 ·
+          按钮绕视窗中心缩放。摩擦与跨度上下限与仪表盘一致。
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="./notes_timeline_chars.ts"></script>
+  </body>
+</html>

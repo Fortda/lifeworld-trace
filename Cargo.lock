@@ -473,6 +473,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "lifeworld_trace_input"
+version = "0.2.0"
+dependencies = [
+ "active-win-pos-rs",
+ "chrono",
+ "image",
+ "rdev",
+ "serde",
+ "serde_json",
+ "windows 0.58.0",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -551,19 +564,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "915b1b472bc21c53464d6c8461c9d3af805ba1ef837e1cac254428f4a77177b1"
 dependencies = [
  "malloc_buf",
-]
-
-[[package]]
-name = "omnitrace_input"
-version = "0.2.0"
-dependencies = [
- "active-win-pos-rs",
- "chrono",
- "image",
- "rdev",
- "serde",
- "serde_json",
- "windows 0.58.0",
 ]
 
 [[package]]

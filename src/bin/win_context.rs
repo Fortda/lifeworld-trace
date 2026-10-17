@@ -6,7 +6,7 @@ use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 fn main() {
-    println!("🪟 OmniTrace [OS窗口雷达 V3 - 焦点防丢版] 已启动！(按 Ctrl+C 停止)");
+    println!("🪟 LifeworldTrace [OS窗口雷达 V3 - 焦点防丢版] 已启动！(按 Ctrl+C 停止)");
 
     let mut last_window_title = String::new();
     let mut last_bounds = (0, 0, 0, 0); 

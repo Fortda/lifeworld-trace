@@ -175,6 +175,7 @@ export async function sendTurn(
     wire_context?: WireContextInput | null;
     mcp?: {
       inject_product_context: boolean;
+      inject_history_timestamps?: boolean;
       enabled_server_ids: string[];
       viewing_clue_board?: boolean;
       active_board_id?: string | null;
@@ -222,6 +223,7 @@ export async function saveUserOnlyCard(
 export type McpPrefs = {
   v: number;
   inject_product_context: boolean;
+  inject_history_timestamps?: boolean;
   servers: { id: string; enabled: boolean }[];
 };
 

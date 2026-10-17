@@ -36,11 +36,11 @@ export type WirePresetsFile = {
   presets: WirePreset[];
 };
 
-export const WIRE_PRESETS_UI_EVENT = "omnitrace-wire-presets-changed";
+export const WIRE_PRESETS_UI_EVENT = "lifeworld_trace-wire-presets-changed";
 
 export type WirePresetSummary = { id: string; title: string };
 
-const HIDE_NOTES_KEY = "omnitrace.notes.preset.hideNotes";
+const HIDE_NOTES_KEY = "lifeworldtrace.notes.preset.hideNotes";
 const HOVER_SHOW_MS = 260;
 const HOVER_HIDE_MS = 180;
 
@@ -690,7 +690,7 @@ export function initWirePresetSidebar(opts: {
     if (!overlay || overlay.classList.contains("hidden")) return;
     hideSaveForm();
   });
-  window.addEventListener("omnitrace-lang", () => renderPresetList());
+  window.addEventListener("lifeworld_trace-lang", () => renderPresetList());
   applyHideNotesPref(readHideNotesPref());
   document
     .getElementById("notes-preset-hide-notes")

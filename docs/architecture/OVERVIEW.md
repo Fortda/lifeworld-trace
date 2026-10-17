@@ -1,6 +1,6 @@
 # 留痕 architecture overview
 
-**般若计划**下的 **留痕**（Liuhen）：当前系统长什么样（契约，不是第二份源码说明书）。
+**般若计划**下的 **留痕**（Lifeworld Trace）：当前系统长什么样（契约，不是第二份源码说明书）。
 
 专门细节：[notes.md](notes.md)（笔记 / MCP / 线索板）、[dashboard.md](dashboard.md)（仪表盘常数）、[android.md](android.md)（手机旁路）。  
 决策见 [docs/adr](../adr/README.md)。发版：[CHANGELOG.md](../../CHANGELOG.md)、[releasing.md](../releasing.md)。
@@ -11,10 +11,10 @@
 
 ## 1. 产品是什么
 
-**Windows 采集（WinRecorder）+ 回放/直播（OmniPlayer）+ 仪表盘**；边载 **Android 采集**（`omnitrace_android`，**当前几乎不可用**，本期不进 Windows OmniPlayer）。关于页：情报和信息采集，以及现象世界模型运行日志；也可作自我侧写。数据默认本机 `OmniDatabase/`，**不上传**。公开仓库 MIT：<https://github.com/Fortda/liuhen>。
+**Windows 采集（WinRecorder）+ 回放/直播（OmniPlayer）+ 仪表盘**；边载 **Android 采集**（`lifeworld_trace_android`，**当前几乎不可用**，本期不进 Windows OmniPlayer）。关于页：情报和信息采集，以及现象世界模型运行日志；也可作自我侧写。数据默认本机 `OmniDatabase/`，**不上传**。公开仓库 MIT：<https://github.com/Fortda/lifeworld-trace>。
 
-- Win 采集：单进程 Rust `omnitrace_input.exe`，进程内插件。
-- Android：源码在 `omnitrace_android/`，现状是一堆 bug、几乎没法当日常用。打算以后**本机局域网**和电脑联动；不要把本期 APK 当成品。
+- Win 采集：单进程 Rust `lifeworld_trace_input.exe`，进程内插件。
+- Android：源码在 `lifeworld_trace_android/`，现状是一堆 bug、几乎没法当日常用。打算以后**本机局域网**和电脑联动；不要把本期 APK 当成品。
 - 壳：Tauri 2 + Vite + 原生 TS；无边框标题栏。WebView2 **回环直连**（`--proxy-server=direct://` + `<-loopback>`），避免 Clash 劫持 `localhost`。
 - 数据双轨：`OmniDatabase/`——高频压缩 bin + ModuleEvent JSONL。
 
@@ -23,19 +23,19 @@
 ## 2. 进程与启动
 
 ```text
-OmniPlayer (Tauri 单实例) ──recorder_ctl──► omnitrace_input.exe (单实例，独立后台)
+OmniPlayer (Tauri 单实例) ──recorder_ctl──► lifeworld_trace_input.exe (单实例，独立后台)
         │  main 窗 ± notes 可摘窗（XOR）              │ 写 → OmniDatabase/
         └── notes ──llm_sidecar──► LiteLLM (:4000)
 ```
 
-- **稳定版入口**：`%LOCALAPPDATA%\OmniTrace\OmniPlayer.exe`（磁盘程序目录名未改，兼容自动更新）；旁路 `data_root.json` 指数据根。**设置页可改数据存放位置**（写 exe 旁同一指针，不搬移已有库；采集运行中拒绝改）；该开关只在设置。开发机 `-Install` 指仓库 `OmniDatabase/`。公开 **setup.exe**（`Liuhen-*-windows-x64-setup.exe`）= 每用户向导（默认 `%LOCALAPPDATA%\OmniTrace`、HKCU 卸载、桌面/开始菜单「留痕」快捷方式）+ 壳与采集 exe + 写指针到 `%USERPROFILE%\OmniTrace\OmniDatabase`；**包内仍无库**。zip 仍提供（同内容便携位 + `安装到本机.bat`）。无指针时 candidate 仍认仓库/已有库（含用户目录与旧的下载目录路径），否则新库落用户目录。壳一律 `resolve_data_root`；禁止 cwd 相对另起空库。正式包须 `custom-protocol`（`package.ps1` 校验）。设置可检查 GitHub Release 并只换程序文件（`incoming\`），不改库。安装：朋友用 setup.exe；zip 内 `安装到本机.bat`；开发机 `omniplayer/package.ps1 -Install` / `scripts/install-stable.ps1`。卸载只删程序目录，不删用户库。
+- **稳定版入口**：`%LOCALAPPDATA%\LifeworldTrace\OmniPlayer.exe`（磁盘程序目录名未改，兼容自动更新）；旁路 `data_root.json` 指数据根。**设置页可改数据存放位置**（写 exe 旁同一指针，不搬移已有库；采集运行中拒绝改）；该开关只在设置。开发机 `-Install` 指仓库 `OmniDatabase/`。公开 **setup.exe**（`LifeworldTrace-*-windows-x64-setup.exe`）= 每用户向导（默认 `%LOCALAPPDATA%\LifeworldTrace`、HKCU 卸载、桌面/开始菜单「留痕」快捷方式）+ 壳与采集 exe + 写指针到 `%USERPROFILE%\LifeworldTrace\OmniDatabase`；**包内仍无库**。zip 仍提供（同内容便携位 + `安装到本机.bat`）。无指针时 candidate 仍认仓库/已有库（含用户目录与旧的下载目录路径），否则新库落用户目录。壳一律 `resolve_data_root`；禁止 cwd 相对另起空库。正式包须 `custom-protocol`（`package.ps1` 校验）。设置可检查 GitHub Release 并只换程序文件（`incoming\`），不改库。安装：朋友用 setup.exe；zip 内 `安装到本机.bat`；开发机 `omniplayer/package.ps1 -Install` / `scripts/install-stable.ps1`。卸载只删程序目录，不删用户库。
 - **开发**：`scripts/run-app.bat` 或 `cd omniplayer && npm run tauri dev`。笔记快捷：`scripts/run-app.bat --page=notes`。
 - **CLI**：`--page=notes|settings|player|dashboard`；`notes` 时另开 `label=notes` WebView。
 - **笔记 XOR 摘窗**：嵌主窗或独立窗，禁止双开同编；摘出/关窗/收回前 `flushNotesPersist`。
 - **壳单实例**：第二次启动转发 argv（`--page=notes` → 前置笔记窗）。
 - **首屏**：默认设置页；player/dashboard/notes **dynamic import**；LiteLLM sidecar 延至首次发消息。
 - **进程解耦**：采集器独立后台（`DETACHED_PROCESS`）；关壳 / 停 `tauri dev` **不**杀采集。设置页只发启停（`--stop` / spawn）。判活读 `control/winrecorder_clock.json` / `module_health.jsonl`。
-- **采集单实例**：`control/winrecorder.pid` + tasklist + 心跳。稳定版 spawn 旁路 exe（cwd=数据根上一级）；dev 仍 `cargo build --bin omnitrace_input`。
+- **采集单实例**：`control/winrecorder.pid` + tasklist + 心跳。稳定版 spawn 旁路 exe（cwd=数据根上一级）；dev 仍 `cargo build --bin lifeworld_trace_input`。
 
 ---
 
@@ -44,7 +44,7 @@ OmniPlayer (Tauri 单实例) ──recorder_ctl──► omnitrace_input.exe (�
 | 路径 | 职责 |
 |------|------|
 | `src/` | 采集宿主（`bin_host`、`modules`、`capture`、`paths`、`health`、钩子） |
-| `omnitrace_android/` | Android 采集 APK（不进 OmniPlayer） |
+| `lifeworld_trace_android/` | Android 采集 APK（不进 OmniPlayer） |
 | `omniplayer/` | 壳：`src/{main,player,dashboard,notes*}.ts` + `src-tauri/` |
 | `omniplayer/src/{lod_band,input_series,time_axis}.ts` | LOD / 日瓦片 / 日历尺子 |
 | `omniplayer/src/modules/` | 播放侧模组 |
@@ -53,7 +53,7 @@ OmniPlayer (Tauri 单实例) ──recorder_ctl──► omnitrace_input.exe (�
 | `mcp/clue_board/`、`mcp/omni_*/` | 线索板 + 笔记 MCP stdio |
 | `docs/architecture/` | **人读**架构总览与专门蓝图（本文） |
 | `docs/adr/` | 架构决策记录（为什么） |
-| `Cargo.toml` / `README.md` | 包名 `omnitrace_input`；人读用法 |
+| `Cargo.toml` / `README.md` | 包名 `lifeworld_trace_input`；人读用法 |
 
 ---
 
@@ -129,12 +129,12 @@ OmniPlayer (Tauri 单实例) ──recorder_ctl──► omnitrace_input.exe (�
 
 | 页 | 职责 |
 |----|------|
-| 设置 | **唯一** WinRecorder 开关 + 自启 + 数据存放位置 + 外观；**模型服务商在设置子页，Lobe 式左列表右详情**（不在笔记主界面并排）；**播放/时间轴滚动缩放在设置子页**（`localStorage omnitrace.playback.v1`）；**对话存档 AI 命名在设置首页**；**检查更新 / 启动时检查**在设置首页；**关于与反馈**为设置子页；默认落地页 |
+| 设置 | **唯一** WinRecorder 开关 + 自启 + 数据存放位置 + 外观；**模型服务商在设置子页，Lobe 式左列表右详情**（不在笔记主界面并排）；**播放/时间轴滚动缩放在设置子页**（`localStorage lifeworld_trace.playback.v1`）；**对话存档 AI 命名在设置首页**；**检查更新 / 启动时检查**在设置首页；**关于与反馈**为设置子页；默认落地页 |
 | 播放器 | 直播/点播、舞台、底栏时间轴（点日段载入） |
 | 仪表盘 | 运作轴 / 统计 / 动态 / 睡眠 / 运行状态；可 `seekPlayerToTs` |
 | 笔记 | 流式笔记 / 线索板 / 时间轴；MCP 白名单非 coding agent。线索板便签可折叠子孙（`parentId`/`collapsed`），可贴图（节点 `image` 只引用 `clue_images/`，历史不嵌二进制）并复制粘贴。**细节** → [notes.md](notes.md) |
 
-**壳应用栏（MVP）**：展开钮与横向标签同处应用列顶栏扁平标签条（底 1px 发丝线；`+` / 展开钮无描边框。收起时展开钮在 `#body` 右上，不挨窗控）；`+` 可加对话窗 / 线索板 / Canvas / Browser / Terminal / File。对话窗/线索板：`+` 悬停子菜单选档/选板，点选则在标签条打开该实例（已开则聚焦）；标签=已打开的混合种类窗口。同一 DOM 时切标签会 `switchBoard` / `applyWirePreset`。布局 `localStorage omnitrace.shell.apps.v1`。**细节** → [notes.md](notes.md)。
+**壳应用栏（MVP）**：展开钮与横向标签同处应用列顶栏扁平标签条（底 1px 发丝线；`+` / 展开钮无描边框。收起时展开钮在 `#body` 右上，不挨窗控）；`+` 可加对话窗 / 线索板 / Canvas / Browser / Terminal / File。对话窗/线索板：`+` 悬停子菜单选档/选板，点选则在标签条打开该实例（已开则聚焦）；标签=已打开的混合种类窗口。同一 DOM 时切标签会 `switchBoard` / `applyWirePreset`。布局 `localStorage lifeworld_trace.shell.apps.v1`。**细节** → [notes.md](notes.md)。
 
 关于/反馈在设置子页「关于与反馈」（仪表盘口径链到此）。**发布物与数据根分离**；设置可检查 GitHub Release 并只换程序文件（incoming），不改库。`main.ts` 只管壳（导航、设置、XOR 摘窗、dynamic import、seek 桥接、应用栏）。Tab：设置|播放器|仪表盘|笔记；仅舞台黑底。笔记浮层 `.omni-float`（细节见 notes）。
 
@@ -149,7 +149,7 @@ OmniPlayer (Tauri 单实例) ──recorder_ctl──► omnitrace_input.exe (�
 ### 5.3 播放器不变量（`player.ts`）
 
 - 冷启动可交互；bin 赶进度在 Rust（共享读；种子禁 `Date.now()`）。**黄条/可播 = 物理流解码区间**（非 jsonl endTime）。
-- 离开播放器页 **不**清跨日内存缓存。时间轴：rAF 合并重画；**平移仅滚轮**（Alt/Ctrl 缩放 + 摩擦惯性）；针可 scrub；无舞台长按拖移。滚轮步进/缩放灵敏度由设置子页控制（`omnitrace.playback.v1`，默认比旧硬编码更小）。
+- 离开播放器页 **不**清跨日内存缓存。时间轴：rAF 合并重画；**平移仅滚轮**（Alt/Ctrl 缩放 + 摩擦惯性）；针可 scrub；无舞台长按拖移。滚轮步进/缩放灵敏度由设置子页控制（`lifeworld_trace.playback.v1`，默认比旧硬编码更小）。轴上方键盘字条跟针滚：按下 `0xFC` 按时间间隔排开，空档留白，尺度不跟轴缩放。
 - 时间显示 = 当日 00:00 起的日内钟。倍速 1…2048× / 自定义；**直播禁用倍速**。
 - **直播** = 今日 path + offset **tail**；缺壁纸/display 时当日全文再向前最多 14 日粘性；`day_roll` 写新日文件。
 - 无数据 / 追赶中 / 针在缓存外 → **纯黑屏**。
@@ -167,7 +167,7 @@ OmniPlayer (Tauri 单实例) ──recorder_ctl──► omnitrace_input.exe (�
 
 ### 5.6 性能探针
 
-自模拟 + 读日志；每次只跑专门模块。`npm run perf:scroll` → `omniplayer/perf-bench-last.json`；页内 `__omniPerfBench()` → `OmniDatabase/cache/perf_bench_last.json`。只观测、不改默认 LOD。自动跑键：`localStorage omnitrace.perfBench.v2.done`。
+自模拟 + 读日志；每次只跑专门模块。`npm run perf:scroll` → `omniplayer/perf-bench-last.json`；页内 `__omniPerfBench()` → `OmniDatabase/cache/perf_bench_last.json`。只观测、不改默认 LOD。自动跑键：`localStorage lifeworld_trace.perfBench.v2.done`。
 
 ---
 
@@ -224,4 +224,4 @@ OmniPlayer (Tauri 单实例) ──recorder_ctl──► omnitrace_input.exe (�
 3. 壳：`omniplayer/index.html` → `main` → `player` / `dashboard` / `notes*` → `src-tauri`。
 4. 对照真实 `OmniDatabase`（本机，不进 git）。卡顿按 §5.6 跑实验。
 5. 改架构：增量修补本文 + 对应专门文件；口径改动同步 §5.5 三处 + dashboard.md。
-6. 手机：`omnitrace_android/`（§8 + android.md）。
+6. 手机：`lifeworld_trace_android/`（§8 + android.md）。

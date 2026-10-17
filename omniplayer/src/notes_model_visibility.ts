@@ -9,7 +9,7 @@ import {
   type ProvidersFile,
 } from "./notes_types";
 
-export const PROVIDERS_CHANGED_EVENT = "omnitrace-providers-changed";
+export const PROVIDERS_CHANGED_EVENT = "lifeworld_trace-providers-changed";
 
 export function disabledKeysOf(pf: ProvidersFile): Set<string> {
   return new Set(pf.disabled_model_keys || []);

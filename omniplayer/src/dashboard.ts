@@ -1555,7 +1555,7 @@ let inAppPerfScheduled = false;
 function scheduleInAppPerfBenchOnce() {
   if (inAppPerfScheduled) return;
   try {
-    if (localStorage.getItem("omnitrace.perfBench") !== "force") return;
+    if (localStorage.getItem("lifeworld_trace.perfBench") !== "force") return;
   } catch {
     return;
   }
@@ -1564,8 +1564,8 @@ function scheduleInAppPerfBenchOnce() {
     void runInAppScrollPerfBench()
       .then(() => {
         try {
-          localStorage.setItem("omnitrace.perfBench.v2.done", "1");
-          localStorage.removeItem("omnitrace.perfBench"); // clear force
+          localStorage.setItem("lifeworld_trace.perfBench.v2.done", "1");
+          localStorage.removeItem("lifeworld_trace.perfBench"); // clear force
         } catch {
           /* ignore */
         }
@@ -2063,153 +2063,92 @@ const PIE_COLORS = [
   "#8a847c",
 ];
 
-function drawFocusUsageChart(
-  canvas: HTMLCanvasElement,
+type KeyFreqEntry = { code: number; name: string; count: number };
+
+function focusDaysBarHtml(
   days: { label: string; total_ms: number; is_today?: boolean }[],
   avgMs: number
-) {
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth || 640;
-  const cssH = canvas.clientHeight || 168;
-  canvas.width = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-  const ctx = canvas.getContext("2d")!;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const padL = 44;
-  const padR = 10;
-  const padT = 12;
-  const padB = 28;
-  const plotW = cssW - padL - padR;
-  const plotH = cssH - padT - padB;
+): string {
+  if (!days.length) {
+    return `<div class="stats-bar-chart"><div class="stats-bar-empty">暂无焦点数据</div></div>`;
+  }
   const maxMs = Math.max(avgMs, ...days.map((d) => d.total_ms), 1);
-
-  ctx.clearRect(0, 0, cssW, cssH);
-  ctx.fillStyle = "#faf8f5";
-  ctx.fillRect(0, 0, cssW, cssH);
-
-  // 网格 + Y 刻度
-  ctx.strokeStyle = "#e8e4de";
-  ctx.fillStyle = "#8a847c";
-  ctx.font = '13px "Noto Sans SC", sans-serif';
-  ctx.textAlign = "right";
-  ctx.textBaseline = "middle";
-  for (let i = 0; i <= 2; i++) {
-    const y = padT + (plotH * i) / 2;
-    ctx.beginPath();
-    ctx.setLineDash(i === 0 ? [] : [3, 4]);
-    ctx.moveTo(padL, y);
-    ctx.lineTo(padL + plotW, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    const labelMs = maxMs * (1 - i / 2);
-    ctx.fillText(formatDurationMs(labelMs).replace(" ", ""), padL - 8, y);
-  }
-
-  // 平均线
-  if (avgMs > 0) {
-    const ay = padT + plotH * (1 - avgMs / maxMs);
-    ctx.strokeStyle = "#c4a574";
-    ctx.setLineDash([5, 4]);
-    ctx.beginPath();
-    ctx.moveTo(padL, ay);
-    ctx.lineTo(padL + plotW, ay);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#a08050";
-    ctx.textAlign = "left";
-    ctx.fillText("平均", padL + 4, ay - 8);
-  }
-
-  const n = Math.max(days.length, 1);
-  const slot = plotW / n;
-  const barW = Math.min(28, slot * 0.55);
-  days.forEach((d, i) => {
-    const h = (d.total_ms / maxMs) * plotH;
-    const x = padL + slot * i + (slot - barW) / 2;
-    const y = padT + plotH - h;
-    ctx.fillStyle = d.is_today ? "#1f6f5b" : "#3d8f7a";
-    ctx.beginPath();
-    const r = 3;
-    ctx.moveTo(x, y + h);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.lineTo(x + barW - r, y);
-    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-    ctx.lineTo(x + barW, y + h);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = "#5a554f";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.font = d.is_today
-      ? '600 13px "Noto Sans SC", sans-serif'
-      : '13px "Noto Sans SC", sans-serif';
-    ctx.fillText(d.label, x + barW / 2, padT + plotH + 8);
-  });
+  const yLabels = [0, 1, 2]
+    .map(
+      (i) =>
+        `<span>${escapeHtml(formatDurationMs(maxMs * (1 - i / 2)).replace(" ", ""))}</span>`
+    )
+    .join("");
+  const avgPct = avgMs > 0 ? Math.min(100, (avgMs / maxMs) * 100) : 0;
+  const avgLine =
+    avgMs > 0
+      ? `<div class="stats-bar-avg" style="bottom:calc(20px + (100% - 20px) * ${avgPct / 100})"><span class="stats-bar-avg-label">平均</span></div>`
+      : "";
+  const cols = days
+    .map((d) => {
+      const h = Math.max(2, Math.round((d.total_ms / maxMs) * 100));
+      const today = d.is_today ? " is-today" : "";
+      return `<div class="stats-bar-col${today}" title="${escapeHtml(d.label)} · ${escapeHtml(formatDurationMs(d.total_ms))}">
+          <div class="stats-bar-stem"><div class="stats-bar-fill" style="height:${h}%"></div></div>
+          <span>${escapeHtml(d.label)}</span>
+        </div>`;
+    })
+    .join("");
+  return `<div class="stats-bar-chart" role="img" aria-label="近七日焦点柱状图">
+      <div class="stats-bar-y">${yLabels}</div>
+      <div class="stats-bar-plot">${avgLine}${cols}</div>
+    </div>`;
 }
 
-function drawFocusPieChart(
-  canvas: HTMLCanvasElement,
-  apps: { app: string; total_ms: number }[]
-) {
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth || 220;
-  const cssH = canvas.clientHeight || 200;
-  canvas.width = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-  const ctx = canvas.getContext("2d")!;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cssW, cssH);
-
+function focusDonutHtml(apps: { app: string; total_ms: number }[]): string {
   const total = apps.reduce((s, a) => s + a.total_ms, 0);
-  const cx = cssW / 2;
-  const cy = cssH / 2;
-  const R = Math.min(cssW, cssH) * 0.38;
-  const r = R * 0.58;
-
   if (total <= 0 || !apps.length) {
-    ctx.strokeStyle = "#e2ddd5";
-    ctx.lineWidth = R - r;
-    ctx.beginPath();
-    ctx.arc(cx, cy, (R + r) / 2, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = "#8a847c";
-    ctx.font = '14px "Noto Sans SC", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("暂无数据", cx, cy);
-    return;
+    return `<div class="stats-donut-host"><div class="stats-donut"></div><div class="stats-donut-hole"><div class="k">暂无数据</div></div></div>`;
   }
-
-  let angle = -Math.PI / 2;
+  let acc = 0;
+  const stops: string[] = [];
   apps.forEach((a, i) => {
-    const slice = (a.total_ms / total) * Math.PI * 2;
+    const start = (acc / total) * 100;
+    acc += a.total_ms;
+    const end = (acc / total) * 100;
     const color = PIE_COLORS[i % PIE_COLORS.length];
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R, angle, angle + slice);
-    ctx.closePath();
-    ctx.fillStyle = color;
-    ctx.fill();
-    angle += slice;
+    stops.push(`${color} ${start}% ${end}%`);
   });
+  const label = escapeHtml(formatDurationMs(total).replace(" ", ""));
+  return `<div class="stats-donut-host">
+      <div class="stats-donut" style="background:conic-gradient(${stops.join(",")})"></div>
+      <div class="stats-donut-hole"><div class="big">${label}</div><div class="k">合计</div></div>
+    </div>`;
+}
 
-  // 甜甜圈中心
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
-
-  ctx.fillStyle = "#1a1a1a";
-  ctx.font = '650 15px "Noto Sans SC", sans-serif';
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(formatDurationMs(total).replace(" ", ""), cx, cy - 8);
-  ctx.fillStyle = "#6a6560";
-  ctx.font = '13px "Noto Sans SC", sans-serif';
-  ctx.fillText("合计", cx, cy + 12);
+function keyFreqBarsHtml(keys: KeyFreqEntry[]): string {
+  if (!keys.length) {
+    return `<div class="stats-bar-chart"><div class="stats-bar-empty">暂无键盘按下记录</div></div>`;
+  }
+  const show = keys.slice(0, 10);
+  const maxCount = Math.max(1, ...show.map((k) => Number(k.count) || 0));
+  const yLabels = [0, 1, 2]
+    .map(
+      (i) =>
+        `<span>${escapeHtml(formatCount(Math.round(maxCount * (1 - i / 2))))}</span>`
+    )
+    .join("");
+  const cols = show
+    .map((k, i) => {
+      const count = Number(k.count) || 0;
+      const h = Math.max(2, Math.round((count / maxCount) * 100));
+      const color = PIE_COLORS[i % PIE_COLORS.length];
+      const label = escapeHtml((k.name || `VK${k.code}`).slice(0, 4));
+      return `<div class="stats-bar-col" title="${escapeHtml(k.name || `VK${k.code}`)} · ${formatCount(count)}">
+          <div class="stats-bar-stem"><div class="stats-bar-fill" style="height:${h}%;background:${color}"></div></div>
+          <span>${label}</span>
+        </div>`;
+    })
+    .join("");
+  return `<div class="stats-bar-chart" role="img" aria-label="键盘按键频率">
+      <div class="stats-bar-y">${yLabels}</div>
+      <div class="stats-bar-plot">${cols}</div>
+    </div>`;
 }
 
 type FocusUsageView = {
@@ -2268,8 +2207,6 @@ function parseFocusUsage(raw: any): FocusUsageView {
   return { days, apps, avgMs, todayMs, weekMs, pieData, appRows, pieLegend };
 }
 
-type KeyFreqEntry = { code: number; name: string; count: number };
-
 type KeyFreqView = {
   total: number;
   top: KeyFreqEntry[];
@@ -2299,87 +2236,8 @@ function parseKeyFrequency(raw: any): KeyFreqView {
   return { total, top, rows };
 }
 
-function drawKeyFreqChart(canvas: HTMLCanvasElement, keys: KeyFreqEntry[]) {
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth || 640;
-  const cssH = canvas.clientHeight || 168;
-  canvas.width = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-  const ctx = canvas.getContext("2d")!;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const padL = 44;
-  const padR = 10;
-  const padT = 12;
-  const padB = 28;
-  const plotW = cssW - padL - padR;
-  const plotH = cssH - padT - padB;
-
-  ctx.clearRect(0, 0, cssW, cssH);
-  ctx.fillStyle = "#faf8f5";
-  ctx.fillRect(0, 0, cssW, cssH);
-
-  if (!keys.length) {
-    ctx.fillStyle = "#8a847c";
-    ctx.font = '13px "Noto Sans SC", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("暂无键盘按下记录", cssW / 2, cssH / 2);
-    return;
-  }
-
-  const show = keys.slice(0, 10);
-  const maxCount = Math.max(1, ...show.map((k) => Number(k.count) || 0));
-  const n = show.length;
-  const slot = plotW / n;
-  const barW = Math.min(28, slot * 0.55);
-
-  ctx.strokeStyle = "#e8e4de";
-  ctx.fillStyle = "#8a847c";
-  ctx.font = '13px "Noto Sans SC", sans-serif';
-  ctx.textAlign = "right";
-  ctx.textBaseline = "middle";
-  for (let i = 0; i <= 2; i++) {
-    const y = padT + (plotH * i) / 2;
-    ctx.beginPath();
-    ctx.setLineDash(i === 0 ? [] : [3, 4]);
-    ctx.moveTo(padL, y);
-    ctx.lineTo(padL + plotW, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    const labelN = Math.round(maxCount * (1 - i / 2));
-    ctx.fillText(formatCount(labelN), padL - 8, y);
-  }
-
-  show.forEach((k, i) => {
-    const count = Number(k.count) || 0;
-    const h = (count / maxCount) * plotH;
-    const x = padL + slot * i + (slot - barW) / 2;
-    const y = padT + plotH - h;
-    const color = PIE_COLORS[i % PIE_COLORS.length];
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    const r = 3;
-    ctx.moveTo(x, y + h);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.lineTo(x + barW - r, y);
-    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-    ctx.lineTo(x + barW, y + h);
-    ctx.closePath();
-    ctx.fill();
-
-    const label = (k.name || `VK${k.code}`).slice(0, 4);
-    ctx.fillStyle = "#5a554f";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.font = '13px "Noto Sans SC", sans-serif';
-    ctx.fillText(label, x + barW / 2, padT + plotH + 8);
-  });
-}
-
-const SHOW_ACTIVE_FOCUS_KEY = "omnitrace.dash.showActiveFocus";
-const STATS_SNAP_PREFIX = "omnitrace.dash.statsSnap.v1.";
+const SHOW_ACTIVE_FOCUS_KEY = "lifeworld_trace.dash.showActiveFocus";
+const STATS_SNAP_PREFIX = "lifeworld_trace.dash.statsSnap.v1.";
 
 type StatsSnapshot = {
   washedAt: number;
@@ -2613,7 +2471,7 @@ function applyStatsReport(
               <div class="sub">${includeActive ? "闲置格已去掉" : "按焦点窗累计"}</div>
             </div>
           </div>
-          <canvas id="dash-focus-canvas" class="chart-card-canvas"></canvas>
+          ${focusDaysBarHtml(usage.days, usage.avgMs)}
         </article>
         <article class="chart-card">
           <div class="chart-card-head">
@@ -2621,7 +2479,7 @@ function applyStatsReport(
             <span class="hint">${appHint}</span>
           </div>
           <div class="pie-wrap">
-            <canvas id="dash-focus-pie" class="pie-canvas"></canvas>
+            ${focusDonutHtml(usage.pieData)}
             <div class="pie-legend">${
               usage.pieLegend || "<p class='muted'>暂无数据</p>"
             }</div>
@@ -2648,7 +2506,7 @@ function applyStatsReport(
               <div class="sub">Top ${keyFreq.top.length} 键</div>
             </div>
           </div>
-          <canvas id="dash-keyfreq-canvas" class="chart-card-canvas"></canvas>
+          ${keyFreqBarsHtml(keyFreq.top)}
           <div class="focus-app-list" style="margin-top:12px">${emptyKeys}</div>
         </article>
       </div>
@@ -2674,13 +2532,6 @@ function applyStatsReport(
       statsDetailsOpen = !!details.open;
     });
     host.scrollTop = statsScrollTop;
-
-    const canvas = $("dash-focus-canvas") as HTMLCanvasElement | null;
-    if (canvas && usage.days.length) drawFocusUsageChart(canvas, usage.days, usage.avgMs);
-    const pie = $("dash-focus-pie") as HTMLCanvasElement | null;
-    if (pie) drawFocusPieChart(pie, usage.pieData);
-    const keyCanvas = $("dash-keyfreq-canvas") as HTMLCanvasElement | null;
-    if (keyCanvas) drawKeyFreqChart(keyCanvas, keyFreq.top);
 
     const meta = document.querySelector("#dash-stats .meta");
     if (meta) {
@@ -2973,7 +2824,7 @@ export function initDashboard() {
       }
     }
   });
-  window.addEventListener("omnitrace-data-root", () => {
+  window.addEventListener("lifeworld_trace-data-root", () => {
     if (dashPanel === "stats") void renderStats({ force: true });
   });
 }

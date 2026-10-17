@@ -2,5 +2,5 @@
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    omnitrace::bin_host::run_with_args(&args);
+    lifeworld_trace::bin_host::run_with_args(&args);
 }

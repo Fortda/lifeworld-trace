@@ -8,12 +8,12 @@
 
 ## 快速配置（Cursor）
 
-复制 `.cursor/mcp.example.json` → `.cursor/mcp.json`（相对命令、不设 env，由服务器探测仓库 `OmniDatabase/`）。若实际库不在仓库内，加绝对路径 env `OMNITRACE_DATA`（exe 旁 `data_root.json` 的 path，或 `%USERPROFILE%\OmniTrace\OmniDatabase`）。改完后启用 `omnitrace-clue-board` 或 Reload Window。
+复制 `.cursor/mcp.example.json` → `.cursor/mcp.json`（相对命令、不设 env，由服务器探测仓库 `OmniDatabase/`）。若实际库不在仓库内，加绝对路径 env `LIFEWORLD_TRACE_DATA`（exe 旁 `data_root.json` 的 path，或 `%USERPROFILE%\LifeworldTrace\OmniDatabase`）。改完后启用 `lifeworld_trace-clue-board` 或 Reload Window。
 
 ```json
 {
   "mcpServers": {
-    "omnitrace-clue-board": {
+    "lifeworld_trace-clue-board": {
       "command": "node",
       "args": ["mcp/clue_board/dist/index.js"]
     }

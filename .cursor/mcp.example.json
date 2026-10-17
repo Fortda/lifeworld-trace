@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "omnitrace-clue-board": {
+    "lifeworld_trace-clue-board": {
       "command": "node",
       "args": ["mcp/clue_board/dist/index.js"]
     }

@@ -8,7 +8,7 @@
   <script>
     (function () {
       try {
-        var m = localStorage.getItem("omnitrace.shell.theme") || "system";
+        var m = localStorage.getItem("lifeworld_trace.shell.theme") || "system";
         var dark =
           m === "dark" ||
           (m !== "light" &&
@@ -18,13 +18,13 @@
         document.documentElement.dataset.theme = "light";
       }
       try {
-        var motion = localStorage.getItem("omnitrace.motionStyle") || "pop-a";
+        var motion = localStorage.getItem("lifeworldtrace.motionStyle") || "pop-a";
         document.documentElement.dataset.motion = motion;
       } catch (e) {
         document.documentElement.dataset.motion = "pop-a";
       }
       try {
-        var lang = localStorage.getItem("omnitrace.shell.lang");
+        var lang = localStorage.getItem("lifeworld_trace.shell.lang");
         if (lang === "en" || lang === "zh-CN") {
           document.documentElement.lang = lang;
         }
@@ -1323,7 +1323,7 @@
       position: absolute; left: 0; right: 0; bottom: 0;
       height: auto;
       min-height: var(--bar-h);
-      max-height: min(160px, 42%);
+      max-height: min(200px, 48%);
       display: flex;
       flex-direction: column;
       padding: 6px 12px 8px;
@@ -1354,6 +1354,17 @@
       flex: 1 1 4px;
       min-width: 0;
     }
+    #player-keytape {
+      display: block;
+      width: 100%;
+      height: 28px;
+      flex: 0 0 28px;
+      border-radius: 6px 6px 0 0;
+      background: var(--input-bg);
+      border: 1px solid var(--line);
+      border-bottom: none;
+      pointer-events: none;
+    }
     #player-timeline {
       display: block;
       width: 100%;
@@ -1361,9 +1372,11 @@
       flex: 0 0 auto;
       min-height: 68px;
       max-height: 88px;
-      border-radius: 6px;
+      border-radius: 0 0 6px 6px;
       background: var(--input-bg);
       border: 1px solid var(--line);
+      border-top: none;
+      margin-top: -4px;
       cursor: default;
       touch-action: none;
     }
@@ -2194,12 +2207,120 @@
       color: var(--muted);
       margin-top: 2px;
     }
+    /* 运行状态等仍用 canvas；统计页焦点/键频/占比已改 DOM */
     .chart-card-canvas {
       width: 100%;
       height: 168px;
       display: block;
       border-radius: 6px;
-      background: #faf8f5;
+      background: var(--input-bg, #faf8f5);
+    }
+    /* 统计图用 DOM，避免 canvas 位图在布局未稳时被 CSS 拉伸 */
+    .stats-bar-chart {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 6px;
+      height: 168px;
+      padding: 10px 8px 6px;
+      box-sizing: border-box;
+      border-radius: 6px;
+      background: var(--input-bg, #faf8f5);
+      min-width: 0;
+    }
+    .stats-bar-y {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 2px 0 20px;
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .stats-bar-plot {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      gap: 4px;
+      min-width: 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid transparent;
+    }
+    .stats-bar-plot::before,
+    .stats-bar-plot::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1px dashed var(--line);
+      pointer-events: none;
+      opacity: 0.85;
+    }
+    .stats-bar-plot::before { top: 33.333%; }
+    .stats-bar-plot::after { top: 66.666%; }
+    .stats-bar-avg {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 0;
+      border-top: 1.5px dashed #c4a574;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .stats-bar-avg-label {
+      position: absolute;
+      left: 4px;
+      top: -14px;
+      font-size: 12px;
+      color: #a08050;
+      line-height: 1;
+    }
+    .stats-bar-col {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 0;
+    }
+    .stats-bar-stem {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .stats-bar-fill {
+      width: min(28px, 55%);
+      min-height: 2px;
+      border-radius: 3px 3px 0 0;
+      background: #3d8f7a;
+    }
+    .stats-bar-col.is-today .stats-bar-fill { background: #1f6f5b; }
+    .stats-bar-col > span {
+      flex: 0 0 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 20px;
+    }
+    .stats-bar-col.is-today > span {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .stats-bar-empty {
+      grid-column: 1 / -1;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 13px;
     }
     .pie-wrap {
       display: grid;
@@ -2209,10 +2330,42 @@
       flex: 1;
       min-height: 0;
     }
-    .pie-canvas {
+    .stats-donut-host {
+      position: relative;
+      width: min(100%, 200px);
+      aspect-ratio: 1;
+      margin: 0 auto;
+    }
+    .stats-donut {
       width: 100%;
-      height: 200px;
-      display: block;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--line);
+    }
+    .stats-donut-hole {
+      position: absolute;
+      inset: 21%;
+      border-radius: 50%;
+      background: var(--card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .stats-donut-hole .big {
+      font-size: 15px;
+      font-weight: 650;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+    .stats-donut-hole .k {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
     }
     .pie-legend {
       display: flex;
@@ -3160,6 +3313,7 @@
       z-index: 12000;
       pointer-events: auto;
       max-width: min(340px, calc(100vw - 24px));
+      background: var(--panel);
     }
     .notes-clue-board-hover-activity-head {
       margin-top: 8px;
@@ -4462,6 +4616,10 @@
       min-width: 220px;
       max-width: min(320px, calc(100vw - 24px));
       padding: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: 0 12px 40px color-mix(in srgb, #000 18%, transparent);
     }
     .notes-wire-origin-head {
       display: flex;
@@ -4629,38 +4787,49 @@
       cursor: text;
       line-height: 1.55;
     }
-    .notes-card-assistant.is-md {
+    .notes-card-assistant.is-md,
+    .notes-md-preview.is-md {
       white-space: normal;
     }
-    .notes-card-assistant.is-md .notes-md-p {
+    .notes-card-assistant.is-md .notes-md-p,
+    .notes-md-preview.is-md .notes-md-p {
       margin: 0 0 0.65em;
     }
-    .notes-card-assistant.is-md .notes-md-p:last-child {
+    .notes-card-assistant.is-md .notes-md-p:last-child,
+    .notes-md-preview.is-md .notes-md-p:last-child {
       margin-bottom: 0;
     }
-    .notes-card-assistant.is-md .notes-md-h {
+    .notes-card-assistant.is-md .notes-md-h,
+    .notes-md-preview.is-md .notes-md-h {
       margin: 0.85em 0 0.4em;
       font-weight: 600;
       line-height: 1.35;
       color: var(--text);
     }
-    .notes-card-assistant.is-md h1.notes-md-h { font-size: 1.2em; }
-    .notes-card-assistant.is-md h2.notes-md-h { font-size: 1.1em; }
-    .notes-card-assistant.is-md h3.notes-md-h { font-size: 1.02em; }
-    .notes-card-assistant.is-md .notes-md-list {
+    .notes-card-assistant.is-md h1.notes-md-h,
+    .notes-md-preview.is-md h1.notes-md-h { font-size: 1.2em; }
+    .notes-card-assistant.is-md h2.notes-md-h,
+    .notes-md-preview.is-md h2.notes-md-h { font-size: 1.1em; }
+    .notes-card-assistant.is-md h3.notes-md-h,
+    .notes-md-preview.is-md h3.notes-md-h { font-size: 1.02em; }
+    .notes-card-assistant.is-md .notes-md-list,
+    .notes-md-preview.is-md .notes-md-list {
       margin: 0.35em 0 0.65em;
       padding-left: 1.35em;
     }
-    .notes-card-assistant.is-md .notes-md-list li {
+    .notes-card-assistant.is-md .notes-md-list li,
+    .notes-md-preview.is-md .notes-md-list li {
       margin: 0.15em 0;
     }
-    .notes-card-assistant.is-md .notes-md-quote {
+    .notes-card-assistant.is-md .notes-md-quote,
+    .notes-md-preview.is-md .notes-md-quote {
       margin: 0.45em 0 0.65em;
       padding: 0.25em 0 0.25em 0.75em;
       border-left: 2px solid color-mix(in srgb, var(--accent) 55%, var(--line));
       color: var(--muted);
     }
-    .notes-card-assistant.is-md .notes-md-pre {
+    .notes-card-assistant.is-md .notes-md-pre,
+    .notes-md-preview.is-md .notes-md-pre {
       margin: 0.45em 0 0.7em;
       padding: 8px 10px;
       overflow-x: auto;
@@ -4672,24 +4841,28 @@
       line-height: 1.45;
       white-space: pre;
     }
-    .notes-card-assistant.is-md code {
+    .notes-card-assistant.is-md code,
+    .notes-md-preview.is-md code {
       font-family: var(--font-mono);
       font-size: 0.9em;
       padding: 0.08em 0.28em;
       border-radius: 4px;
       background: color-mix(in srgb, var(--line) 45%, transparent);
     }
-    .notes-card-assistant.is-md .notes-md-pre code {
+    .notes-card-assistant.is-md .notes-md-pre code,
+    .notes-md-preview.is-md .notes-md-pre code {
       padding: 0;
       background: transparent;
       font-size: inherit;
     }
-    .notes-card-assistant.is-md a {
+    .notes-card-assistant.is-md a,
+    .notes-md-preview.is-md a {
       color: var(--accent);
       text-decoration: underline;
       text-underline-offset: 2px;
     }
-    .notes-card-assistant.is-md hr {
+    .notes-card-assistant.is-md hr,
+    .notes-md-preview.is-md hr {
       border: none;
       border-top: 1px solid var(--line);
       margin: 0.75em 0;
@@ -5618,14 +5791,182 @@
       width: 100%;
       min-width: 0;
       flex: none;
+      padding-right: 26px;
+      box-sizing: border-box;
+    }
+    .notes-composer-md-btn {
+      position: absolute;
+      top: 0;
+      right: 2px;
+      z-index: 3;
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.8;
+    }
+    .notes-composer-md-btn:hover,
+    .notes-composer-md-btn:focus-visible,
+    .notes-composer-md-btn[aria-expanded="true"],
+    .notes-composer-md-btn.is-active {
+      opacity: 1;
+      color: var(--text);
+      background: color-mix(in srgb, var(--line) 28%, transparent);
+      outline: none;
+    }
+    .notes-composer-md-btn svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+    .notes-composer.is-md-open .notes-composer-input-wrap {
+      display: none;
+    }
+    #notes-md-editor {
+      display: none;
+      flex-direction: column;
+      min-height: 240px;
+      max-height: min(56vh, 560px);
+      margin: 0 0 4px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+    .notes-composer.is-md-open #notes-md-editor {
+      display: flex;
+    }
+    #notes-md-editor[hidden] {
+      display: none !important;
+    }
+    .notes-md-editor-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
+      padding: 6px 8px 4px;
+      border-bottom: 1px solid var(--line);
+    }
+    .notes-md-editor-title {
+      margin: 0;
+      font: 600 12px/1.3 var(--font-sans);
+      color: var(--muted);
+      flex: none;
+    }
+    .notes-md-editor-tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .notes-md-tab {
+      height: 24px;
+      padding: 0 8px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font: 600 12px/1 var(--font-sans);
+    }
+    .notes-md-tab:hover,
+    .notes-md-tab.is-active {
+      color: var(--text);
+      background: color-mix(in srgb, var(--line) 28%, transparent);
+    }
+    #notes-md-editor-close {
+      width: 24px;
+      height: 24px;
+      margin-left: auto;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+    #notes-md-editor-close:hover {
+      color: var(--text);
+      background: color-mix(in srgb, var(--line) 28%, transparent);
+    }
+    #notes-md-source {
+      flex: 1 1 auto;
+      min-height: 160px;
+      width: 100%;
+      resize: none;
+      margin: 0;
+      padding: 10px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font: 13px/1.5 var(--font-mono);
+      outline: none;
+    }
+    #notes-md-preview {
+      flex: 1 1 auto;
+      min-height: 160px;
+      overflow: auto;
+      padding: 10px 12px;
+      font: 13px/1.55 var(--font-sans);
+      color: var(--text);
+    }
+    #notes-md-preview.is-empty {
+      color: var(--muted);
+    }
+    .notes-md-editor-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      flex: none;
+      padding: 6px 8px 8px;
+      border-top: 1px solid var(--line);
+    }
+    .notes-md-editor-foot button {
+      height: 26px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font: 600 12px/1 var(--font-sans);
+    }
+    .notes-md-editor-foot button:hover {
+      background: color-mix(in srgb, var(--line) 28%, transparent);
+    }
+    #notes-md-send {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    }
+    .notes-send-key-check {
+      width: 18px;
+      flex: none;
+      text-align: center;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
     }
     #notes-temp-live {
       display: none;
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 26px;
+      bottom: 0;
       z-index: 0;
       overflow: hidden;
       pointer-events: none;
+      padding: 0;
       font: 13px var(--font-sans);
       line-height: 1.45;
       white-space: pre-wrap;
@@ -7718,7 +8059,7 @@
               </div>
               <p data-i18n-html="dlg.about.intro">留痕是辅助人尽可能记录和模拟世界的软件，也可作自我侧写。它是<strong>般若计划</strong>下的一套<strong>情报和信息采集</strong>与<strong>现象世界模型运行日志</strong>维护、管理的终端；意在扩展感知在现象世界时空因果链网络上的深度与广度。</p>
               <ul>
-                <li data-i18n-html="dlg.about.bullet1"><strong>采集</strong>：WinRecorder（<span class="dlg-meta">omnitrace_input.exe</span>）在后台记录键鼠物理流与窗口环境，作为情报与信息、现象世界模型运行痕迹的一路输入。</li>
+                <li data-i18n-html="dlg.about.bullet1"><strong>采集</strong>：WinRecorder（<span class="dlg-meta">lifeworld_trace_input.exe</span>）在后台记录键鼠物理流与窗口环境，作为情报与信息、现象世界模型运行痕迹的一路输入。</li>
                 <li data-i18n-html="dlg.about.bullet2"><strong>回放</strong>：OmniPlayer 播放器与仪表盘，用于回看、对照与从日志中提炼结构。</li>
                 <li data-i18n-html="dlg.about.bullet3"><strong>数据</strong>：全部落在本机 <span class="dlg-meta">OmniDatabase/</span>，不上传。</li>
               </ul>
@@ -7814,7 +8155,7 @@
                 <ul>
                   <li><strong>焦点段</strong>：<code>focus_change</code> JSONL；无后续事件时单段最多 2 小时（<code>FOCUS_SEGMENT_CAP_MS</code>）。应用名去掉 <code>.exe</code>；标题含「桌面或失去焦点」记为「桌面 / 空闲」。占比图截前 20 个应用。</li>
                   <li><strong>有人操作 vs AFK</strong>：一日 288 个 5 分钟格（300s）。格内 <code>.otih</code> 任一 1s 柱 mouse 或 key ≥ 1 视为「有人操作」；否则该格上的焦点视为可能 AFK。仅点击或滚轮不能单独点亮有人操作格。</li>
-                  <li><strong>「仅有人操作」开关</strong>：默认关 = 近 7 日焦点三张图用<strong>全部</strong> <code>focus_change</code> 段。打开后<strong>同一套三张图</strong>改用「焦点 ∩ 有键鼠的 5 分钟格」，不是另出三张卡。偏好 <code>localStorage omnitrace.dash.showActiveFocus</code>。</li>
+                  <li><strong>「仅有人操作」开关</strong>：默认关 = 近 7 日焦点三张图用<strong>全部</strong> <code>focus_change</code> 段。打开后<strong>同一套三张图</strong>改用「焦点 ∩ 有键鼠的 5 分钟格」，不是另出三张卡。偏好 <code>localStorage lifeworld_trace.dash.showActiveFocus</code>。</li>
                 </ul>
                     </div>
                   </div>
@@ -7849,7 +8190,7 @@
                   <li><strong>今日模组事件量</strong>：当日各模组 <code>events_DD.jsonl</code> 非空且可解析为 JSON 的行，不按 <code>kind</code> 过滤（含 <code>body</code>、<code>ime</code>）。input 键鼠次数另计自 bin，不是 JSONL 行数。</li>
                   <li><strong>焦点 / win_map</strong>：共用 <code>win_state_hook</code>（前台事件，非 EnumWindows 轮询）。</li>
                   <li><strong>机体</strong>（<code>body</code>）：10s 采样；模拟量 <code>hk_sample</code> 量化死区，无变化最多 60s 一帧；当日 JSONL 超 8 MB 则 housekeeping 降为仅 60s 帧。网卡写 <code>telecom.adapters[]</code>（guid/友好名/media + In/OutOctets 差分得 B/s），非抓包、非逐进程字节。磁盘写 <code>cdh.disk_read_Bps</code>/<code>disk_write_Bps</code>（PDH <code>PhysicalDisk(_Total)</code> Bytes/sec）。不周期性 WiFi 扫描/蓝牙 Inquiry。</li>
-                  <li><strong>运行状态页</strong>：近 30min；机箱槽位折线 + 角落刻度指针小仪表。网络默认 <strong>MB/s</strong>（可切 <strong>Mbps</strong>，偏好 <code>localStorage omnitrace.dash.netUnit</code>）= 各适配器 in+out B/s；内存为已用/总量 <strong>GB</strong>；磁盘为整机<strong>读/写吞吐</strong>（PDH <code>PhysicalDisk(_Total)</code> Bytes/sec → MB/s 双线，非已用容量）；CPU/GPU 利用率 %；功率无真实源则藏卡。键鼠/焦点/IME 事件率与模组心跳仍为辅助卡。</li>
+                  <li><strong>运行状态页</strong>：近 30min；机箱槽位折线 + 角落刻度指针小仪表。网络默认 <strong>MB/s</strong>（可切 <strong>Mbps</strong>，偏好 <code>localStorage lifeworld_trace.dash.netUnit</code>）= 各适配器 in+out B/s；内存为已用/总量 <strong>GB</strong>；磁盘为整机<strong>读/写吞吐</strong>（PDH <code>PhysicalDisk(_Total)</code> Bytes/sec → MB/s 双线，非已用容量）；CPU/GPU 利用率 %；功率无真实源则藏卡。键鼠/焦点/IME 事件率与模组心跳仍为辅助卡。</li>
                   <li><strong>健康心跳</strong>：宿主约 2s 写 <code>beat</code> 到 <code>module_health.jsonl</code>。</li>
                   <li><strong>输入法</strong>（<code>ime</code>）：小狼毫侧路写当时可见页（组字串、候选、窗矩形）到 JSONL；锁屏 / UAC 安全桌面不采。</li>
                 </ul>
@@ -8060,6 +8401,7 @@
                   <span class="tl-spacer"></span>
                   <button type="button" id="btn-fullscreen" title="全屏 (Enter)">⛶ 全屏</button>
                 </div>
+                <canvas id="player-keytape" aria-hidden="true"></canvas>
                 <canvas id="player-timeline" tabindex="0" aria-label="播放时间轴"></canvas>
                 <input type="range" id="time-slider" min="0" max="100" value="0" step="1" tabindex="-1" aria-hidden="true">
               </div>
@@ -8203,6 +8545,28 @@
                   <div class="notes-composer-input-wrap">
                     <div id="notes-temp-live" class="notes-temp-tape" aria-hidden="true"></div>
                     <textarea id="notes-input" rows="1" placeholder="单轮提问（接线后带上历史）…"></textarea>
+                    <button type="button" id="notes-composer-md-btn" class="notes-composer-md-btn" aria-haspopup="dialog" aria-expanded="false" data-i18n-title="notes.mdEditor.btnTitle" data-i18n-aria="notes.mdEditor.btnTitle" title="长文 Markdown">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="5" y="4" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div id="notes-md-editor" hidden aria-hidden="true" role="dialog" aria-labelledby="notes-md-editor-title">
+                    <div class="notes-md-editor-head">
+                      <h2 id="notes-md-editor-title" class="notes-md-editor-title" data-i18n="notes.mdEditor.title">长文</h2>
+                      <div class="notes-md-editor-tabs" role="tablist">
+                        <button type="button" id="notes-md-tab-source" class="notes-md-tab is-active" role="tab" aria-selected="true" data-i18n="notes.mdEditor.source">源码</button>
+                        <button type="button" id="notes-md-tab-preview" class="notes-md-tab" role="tab" aria-selected="false" data-i18n="notes.mdEditor.preview">预览</button>
+                      </div>
+                      <button type="button" id="notes-md-editor-close" data-i18n-title="notes.mdEditor.close" data-i18n-aria="notes.mdEditor.close" title="关闭" aria-label="关闭">×</button>
+                    </div>
+                    <textarea id="notes-md-source" data-i18n-placeholder="notes.mdEditor.placeholder" placeholder="写长文，支持 Markdown…"></textarea>
+                    <div id="notes-md-preview" class="notes-md-preview" hidden></div>
+                    <div class="notes-md-editor-foot">
+                      <button type="button" id="notes-md-apply" data-i18n="notes.mdEditor.done">完成</button>
+                      <button type="button" id="notes-md-send" data-i18n="notes.mdEditor.send">发送</button>
+                    </div>
                   </div>
                   <div class="notes-composer-toolbar">
                     <div class="notes-composer-toolbar-left">
@@ -8217,7 +8581,7 @@
                       <button type="button" id="notes-mcp-btn" class="notes-mcp-btn" aria-haspopup="dialog" aria-expanded="false" aria-label="MCP 工具" title="MCP 工具">MCP</button>
                       <button type="button" id="notes-ctx-usage-btn" class="notes-ctx-ring-btn" aria-haspopup="dialog" aria-expanded="false" aria-label="上下文用量" title="上下文用量">
                       </button>
-                      <button type="button" id="notes-send" aria-label="发送">
+                      <button type="button" id="notes-send" aria-label="发送" data-i18n-aria="notes.send" data-i18n-title="notes.sendKey.btnTitle" title="发送（右键改快捷键）">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M12 19V6.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
                           <path d="M7.2 11.2 12 6.4l4.8 4.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>

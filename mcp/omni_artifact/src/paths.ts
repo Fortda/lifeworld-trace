@@ -26,7 +26,7 @@ function repoRootCandidates(): string[] {
 }
 
 export function resolveDataRoot(): string {
-  for (const key of ["OMNI_DATABASE", "OMNITRACE_DATA"]) {
+  for (const key of ["OMNI_DATABASE", "LIFEWORLD_TRACE_DATA", "OMNITRACE_DATA"]) {
     const v = process.env[key]?.trim();
     if (v) return resolve(v);
   }

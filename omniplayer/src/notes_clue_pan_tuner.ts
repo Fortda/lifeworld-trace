@@ -5,8 +5,8 @@ import { shellT } from "./shell_i18n";
 
 export type PanCurvePoint = { t: number; v: number };
 
-const LS_CURVE = "omnitrace.clue.pan_curve";
-const LS_DAMPING = "omnitrace.clue.pan_damping";
+const LS_CURVE = "lifeworld_trace.clue.pan_curve";
+const LS_DAMPING = "lifeworld_trace.clue.pan_damping";
 
 /** 阻尼=1 时的惯性总时长（秒）；阻尼越大时长越短、滑行越短 */
 const BASE_INERTIA_DURATION_SEC = 0.72;
@@ -265,7 +265,7 @@ export function initCluePanTuner() {
   applyAxisLabels();
   renderChart();
 
-  window.addEventListener("omnitrace-lang", () => {
+  window.addEventListener("lifeworld_trace-lang", () => {
     applyAxisLabels();
   });
 }

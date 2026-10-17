@@ -2,9 +2,9 @@
  * 播放器 / 时间轴滚轮平移与缩放偏好。
  * 设置子页为唯一开关面；播放器与仪表盘 HUD 只读同一 localStorage。
  */
-export const PLAYBACK_PREFS_KEY = "omnitrace.playback.v1";
-export const PLAYBACK_PREFS_EVENT = "omnitrace-playback-prefs";
-const LEGACY_DASH_KEY = "omnitrace.dash.viewPrefs";
+export const PLAYBACK_PREFS_KEY = "lifeworld_trace.playback.v1";
+export const PLAYBACK_PREFS_EVENT = "lifeworld_trace-playback-prefs";
+const LEGACY_DASH_KEY = "lifeworld_trace.dash.viewPrefs";
 
 export type PlaybackPrefs = {
   /** 播放器时间轴：每格滚轮平移占当前视窗的百分比 */

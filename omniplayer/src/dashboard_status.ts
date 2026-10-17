@@ -49,7 +49,7 @@ export type StatusChartsReport = {
 
 type NetUnit = "MBps" | "Mbps";
 
-const NET_UNIT_KEY = "omnitrace.dash.netUnit";
+const NET_UNIT_KEY = "lifeworld_trace.dash.netUnit";
 const LINE_COLORS = [
   "#1f6f5b",
   "#3b6fa0",
