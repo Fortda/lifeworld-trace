@@ -4,6 +4,7 @@
  */
 import {
   clueClipboardPlainText,
+  clueNoteFieldPasteIntent,
   clueShortcutAction,
   decodeClueClipboardHtml,
   encodeClueClipboardHtml,
@@ -98,13 +99,41 @@ assert(
   "nothing selected"
 );
 assert(
+  clueShortcutAction({ ...base, key: "x" }) === "cut-notes",
+  "cut selection"
+);
+assert(
+  clueShortcutAction({ ...base, key: "x", fieldFocused: true, fieldHasCharSelection: true }) ===
+    "browser-text",
+  "selected characters win on cut"
+);
+assert(
+  clueShortcutAction({ ...base, key: "x", selectedNoteCount: 0 }) === "ignore",
+  "cut with nothing selected"
+);
+assert(
   clueShortcutAction({ ...base, key: "v", fieldFocused: false }) === "paste-board",
   "paste on board"
 );
 assert(
   clueShortcutAction({ ...base, key: "v", fieldFocused: true, fieldHasCharSelection: true }) ===
+    "paste-field",
+  "paste into field arms image attach"
+);
+assert(
+  clueNoteFieldPasteIntent({ noteFieldFocused: true, hasClipboardImage: true }) ===
+    "attach-image",
+  "field + image attaches"
+);
+assert(
+  clueNoteFieldPasteIntent({ noteFieldFocused: true, hasClipboardImage: false }) ===
     "browser-text",
-  "paste into field"
+  "field + text only"
+);
+assert(
+  clueNoteFieldPasteIntent({ noteFieldFocused: false, hasClipboardImage: true }) ===
+    "browser-text",
+  "board path not field-attach"
 );
 assert(clueShortcutAction({ ...base, clueMode: false }) === "ignore", "inactive board");
 assert(clueShortcutAction({ ...base, key: "z" }) === "ignore", "undo stays separate");

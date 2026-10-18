@@ -1,34 +1,34 @@
 <p align="center">
-  <img src="docs/images/icon.png" width="96" height="96" alt="Liuhen">
+  <img src="docs/images/icon.png" width="96" height="96" alt="Lifeworld Trace">
 </p>
 
-<h1 align="center">Liuhen</h1>
+<h1 align="center">Lifeworld Trace</h1>
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/README-%E4%B8%AD%E6%96%87-1f6f5b" alt="Chinese README"></a>
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-2c2a27" alt="English README"></a>
-  <a href="https://github.com/Fortda/liuhen/releases/latest"><img src="https://img.shields.io/github/v/release/Fortda/liuhen?label=download" alt="Download"></a>
+  <a href="https://github.com/Fortda/lifeworld-trace/releases/latest"><img src="https://img.shields.io/github/v/release/Fortda/lifeworld-trace?label=download" alt="Download"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-1f6f5b" alt="MIT"></a>
-  <a href="https://github.com/Fortda/liuhen"><img src="https://img.shields.io/badge/github-Fortda%2Fliuhen-2c2a27" alt="GitHub"></a>
+  <a href="https://github.com/Fortda/lifeworld-trace"><img src="https://img.shields.io/badge/github-Fortda%2Flifeworld-trace-2c2a27" alt="GitHub"></a>
 </p>
 
-**Liuhen** (留痕) is software that helps people record and simulate the world as fully as they can — a form of self-profiling.
+**Lifeworld Trace** (留痕) is software that helps people record and simulate the world as fully as they can — a form of self-profiling.
 
 This project is the author's **100% AI-oriented programming as a layperson**.
 
 It is a Prajna Plan terminal for intelligence and information capture, and for maintaining a run log of a phenomenal-world model. It aims to extend how far and how finely you can sense the spatiotemporal causal-chain network of the phenomenal world.
 
-Repo: <https://github.com/Fortda/liuhen> · License: [MIT](LICENSE)
+Repo: <https://github.com/Fortda/lifeworld-trace> · License: [MIT](LICENSE)
 
 By default everything is written under local `OmniDatabase/`. **Nothing is uploaded.** Do not commit API keys, cookies, recordings, or the database.
 
-The Windows shell is still being built and polished. **The Android app is currently almost unusable** (lots of bugs); `omnitrace_android/` is a sketch, not a daily driver. The intent is later **LAN sync with the PC** on your own network — not uploading traces to someone else’s server.
+The Windows shell is still being built and polished. **The Android app is currently almost unusable** (lots of bugs); `lifeworld_trace_android/` is a sketch, not a daily driver. The intent is later **LAN sync with the PC** on your own network — not uploading traces to someone else’s server.
 
 Screenshots sit next to each feature below.
 
 ## What it does
 
-- **WinRecorder** (`omnitrace_input.exe`): records mouse, keyboard, which window is focused, and the desktop in the background on Windows. Closing the player window does not stop recording. Use it later to replay “what was on screen then,” and for the dashboard timeline and stats. The switch lives on the Settings page.
+- **WinRecorder** (`lifeworld_trace_input.exe`): records mouse, keyboard, which window is focused, and the desktop in the background on Windows. Closing the player window does not stop recording. Use it later to replay “what was on screen then,” and for the dashboard timeline and stats. The switch lives on the Settings page.
 
   <p align="center"><img src="docs/images/settings.png" alt="Settings: WinRecorder and appearance" width="880"></p>
 
@@ -95,7 +95,7 @@ Screenshots sit next to each feature below.
 
   <p align="center"><img src="docs/images/notes-clue.jpg" alt="Clue board" width="880"></p>
 
-- **Android** (`omnitrace_android/`): a phone trial you sideload from Releases. **Almost unusable today.** Data stays on the phone. The plan is later to talk to the PC on your own local network. It is not in the Windows app yet.
+- **Android** (`lifeworld_trace_android/`): a phone trial you sideload from Releases. **Almost unusable today.** Data stays on the phone. The plan is later to talk to the PC on your own local network. It is not in the Windows app yet.
 
 **Keyboard-log warning:** Capture files record real keystrokes. Sending them to any cloud model is sending passwords, DMs, one-time codes, and everything you typed. The in-app assistant must not read the keyboard capture file (`trace_DD.bin`). If you enlarge what tools the assistant can use, make sure it still cannot see keystrokes.
 
@@ -122,12 +122,12 @@ flowchart LR
 
 For everyday use you do not need a developer toolchain. You need **Windows 10 or 11 (64-bit)**.
 
-1. Open [Releases](https://github.com/Fortda/liuhen/releases/latest)
-2. Download **`Liuhen-…-windows-x64-setup.exe`** (player + recorder)
-3. Next, Next, Next. Default folder is per-user `%LOCALAPPDATA%\OmniTrace` (no admin prompt in the usual case; on-disk folder name unchanged)
-4. Open **Liuhen** (留痕) from the desktop shortcut
+1. Open [Releases](https://github.com/Fortda/lifeworld-trace/releases/latest)
+2. Download **`LifeworldTrace-…-windows-x64-setup.exe`** (player + recorder)
+3. Next, Next, Next. Default folder is per-user `%LOCALAPPDATA%\LifeworldTrace` (no admin prompt in the usual case; on-disk folder name unchanged)
+4. Open **Lifeworld Trace** (留痕) from the desktop shortcut
 
-Data lives under your user folder `OmniTrace\OmniDatabase`. It is **not uploaded** and is **not** inside the installer. Uninstall (Settings → Apps → Liuhen / 留痕) removes the program only, not that folder.
+Data lives under your user folder `LifeworldTrace\OmniDatabase`. It is **not uploaded** and is **not** inside the installer. Uninstall (Settings → Apps → Lifeworld Trace / 留痕) removes the program only, not that folder.
 
 After setup.exe is installed, 留痕 checks for updates on startup and, if you confirm, downloads and installs the full installer (the library is not modified). A portable zip does not update itself in place. First install is still setup.exe.
 
@@ -141,7 +141,7 @@ How a maintainer cuts setup.exe / zip and attaches them: [docs/releasing.md](doc
 
 ### From source (development)
 
-The stable copy goes to `%LOCALAPPDATA%\OmniTrace`, with a pointer at the repo `OmniDatabase/`:
+The stable copy goes to `%LOCALAPPDATA%\LifeworldTrace`, with a pointer at the repo `OmniDatabase/`:
 
 ```powershell
 .\scripts\install-stable.ps1
@@ -155,12 +155,12 @@ Development: `cd omniplayer && npm run tauri dev`, or `scripts/run-app.bat` at t
 
 This is a sideload trial APK for ordinary people. It is **almost unusable** (lots of bugs), not a daily driver. Data stays on the phone. It is **not uploaded** and is **not** inside the APK. LAN talk with the PC is later, not now.
 
-1. Open [Releases](https://github.com/Fortda/liuhen/releases/latest)
-2. Download **`Liuhen-…-android.apk`**
+1. Open [Releases](https://github.com/Fortda/lifeworld-trace/releases/latest)
+2. Download **`LifeworldTrace-…-android.apk`**
 3. Open that file on the phone to install (the system will warn about unknown sources: allow this one file)
 4. On many phones, also ignore battery optimization and allow autostart, or the recorder will be killed
 
-Do not upload traces off the phone. If a Release has no APK yet, wait for the next one, or have someone who can build run `omnitrace_android/package.ps1`.
+Do not upload traces off the phone. If a Release has no APK yet, wait for the next one, or have someone who can build run `lifeworld_trace_android/package.ps1`.
 
 ## Docs
 
@@ -187,7 +187,7 @@ Local-first stays the rule: capture, notes, and any future bill import do not sh
 
 ## Contributing
 
-Bugs and ideas: [GitHub Issues](https://github.com/Fortda/liuhen/issues). Settings → About & Feedback opens the same place.
+Bugs and ideas: [GitHub Issues](https://github.com/Fortda/lifeworld-trace/issues). Settings → About & Feedback opens the same place.
 
 Keep `OmniDatabase/`, secrets, recordings, and prompt files on your machine. Screenshot notes: [docs/images/README.md](docs/images/README.md).
 

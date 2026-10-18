@@ -5,8 +5,8 @@
  *
  *   node scripts/write-updater-manifest.mjs \
  *     --version 0.1.5 \
- *     --signature-file dist/Liuhen-0.1.5-windows-x64-setup.exe.sig \
- *     --url https://github.com/Fortda/liuhen/releases/download/v0.1.5/Liuhen-0.1.5-windows-x64-setup.exe \
+ *     --signature-file dist/LifeworldTrace-0.1.5-windows-x64-setup.exe.sig \
+ *     --url https://github.com/Fortda/lifeworld-trace/releases/download/v0.1.5/LifeworldTrace-0.1.5-windows-x64-setup.exe \
  *     --out dist/latest.json
  *
  *   node scripts/write-updater-manifest.mjs --self-test
@@ -30,8 +30,8 @@ export function buildUpdaterManifest({
     throw new Error("signature file is empty");
   }
   const assetUrl = String(url || "").trim();
-  if (!assetUrl.startsWith("https://github.com/Fortda/liuhen/releases/download/")) {
-    throw new Error("url must be a Fortda/liuhen GitHub Release download");
+  if (!assetUrl.startsWith("https://github.com/Fortda/lifeworld-trace/releases/download/")) {
+    throw new Error("url must be a Fortda/lifeworld-trace GitHub Release download");
   }
   const platform = { signature: sig, url: assetUrl };
   return {
@@ -57,7 +57,7 @@ function selfTest() {
     notes: "full nsis",
     pubDate: "2026-10-02T00:00:00.000Z",
     signature: "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNpZ25lcgo=",
-    url: "https://github.com/Fortda/liuhen/releases/download/v0.1.6/Liuhen-0.1.6-windows-x64-setup.exe",
+    url: "https://github.com/Fortda/lifeworld-trace/releases/download/v0.1.6/LifeworldTrace-0.1.6-windows-x64-setup.exe",
   });
   if (manifest.version !== "0.1.6") throw new Error("version strip failed");
   if (manifest.platforms["windows-x86_64"].url !== manifest.platforms["windows-x86_64-nsis"].url) {

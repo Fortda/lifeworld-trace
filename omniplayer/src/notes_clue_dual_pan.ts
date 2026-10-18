@@ -1,30 +1,49 @@
 /**
- * 拖便签时用右键（或中键）平移视口。
- * WebView2 在 LMB setPointerCapture 期间常丢掉 button=2 的 pointerdown，
- * 所以开停以 buttons 位图为准，pointerdown 只作尽早 preventDefault。
- *
- * MouseEvent.button: 0 左 / 1 中 / 2 右
- * MouseEvent.buttons: bit0=1 左, bit1=2 右, bit2=4 中
+ * Dual-button pan helpers for clue-board card drag.
+ * Mouse buttons bitmask (UI Events): 1 = LMB, 2 = RMB, 4 = middle.
+ * Prefer RMB; middle is a WebView2 fallback when secondary is suppressed.
  */
 
+export const AUX_PAN_RMB = 2;
+export const AUX_PAN_MMB = 4;
+
+/** True when RMB and/or middle are held (with or without LMB). */
+export function wantAuxPanFromButtons(buttons: number): boolean {
+  return (buttons & (AUX_PAN_RMB | AUX_PAN_MMB)) !== 0;
+}
+
+/** button on pointerdown/up: 2 = right, 1 = middle. */
 export function isAuxPanButton(button: number): boolean {
   return button === 2 || button === 1;
 }
 
-export function wantAuxPanFromButtons(buttons: number): boolean {
-  return (buttons & 2) !== 0 || (buttons & 4) !== 0;
-}
+export type AuxPanStep = {
+  dpx: number;
+  dpy: number;
+  nextX: number;
+  nextY: number;
+};
 
+/** Screen-space pan delta from last sample (same units as empty-board LMB pan). */
 export function auxPanStep(
   lastX: number,
   lastY: number,
-  x: number,
-  y: number
-): { nextX: number; nextY: number; dpx: number; dpy: number } {
+  clientX: number,
+  clientY: number
+): AuxPanStep {
   return {
-    nextX: x,
-    nextY: y,
-    dpx: x - lastX,
-    dpy: y - lastY,
+    dpx: clientX - lastX,
+    dpy: clientY - lastY,
+    nextX: clientX,
+    nextY: clientY,
   };
+}
+
+/** Beyond slop → treat as pan (suppress context menu). */
+export function auxPanMovedBeyondSlop(
+  totalDx: number,
+  totalDy: number,
+  slop: number
+): boolean {
+  return totalDx * totalDx + totalDy * totalDy > slop * slop;
 }

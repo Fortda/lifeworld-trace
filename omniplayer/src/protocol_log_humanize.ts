@@ -5,7 +5,7 @@
 
 import { uiLang } from "./notes_cards";
 
-export const PROTOCOL_LOG_PLAIN_STORAGE_KEY = "omnitrace.notes.protocol_log_plain";
+export const PROTOCOL_LOG_PLAIN_STORAGE_KEY = "lifeworldtrace.notes.protocol_log_plain";
 
 export function isProtocolLogPlainMode(): boolean {
   try {

@@ -7,28 +7,28 @@
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/README-%E4%B8%AD%E6%96%87-1f6f5b" alt="中文 README"></a>
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-2c2a27" alt="English README"></a>
-  <a href="https://github.com/Fortda/liuhen/releases/latest"><img src="https://img.shields.io/github/v/release/Fortda/liuhen?label=%E4%B8%8B%E8%BD%BD" alt="下载"></a>
+  <a href="https://github.com/Fortda/lifeworld-trace/releases/latest"><img src="https://img.shields.io/github/v/release/Fortda/lifeworld-trace?label=%E4%B8%8B%E8%BD%BD" alt="下载"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-1f6f5b" alt="MIT"></a>
-  <a href="https://github.com/Fortda/liuhen"><img src="https://img.shields.io/badge/github-Fortda%2Fliuhen-2c2a27" alt="GitHub"></a>
+  <a href="https://github.com/Fortda/lifeworld-trace"><img src="https://img.shields.io/badge/github-Fortda%2Flifeworld-trace-2c2a27" alt="GitHub"></a>
 </p>
 
-**留痕**（英文 Liuhen）是辅助人尽可能记录和模拟世界的软件，也可作自我侧写。
+**留痕**（英文 Lifeworld Trace）是辅助人尽可能记录和模拟世界的软件，也可作自我侧写。
 
-外行100% 面向 AI 编程
+这是作者作为外行、**100% 面向 AI 编程**做出来的项目。
 
 它是般若计划下的一套情报和信息采集与现象世界模型运行日志维护、管理的终端；意在扩展感知在现象世界时空因果链网络上的深度与广度。
 
-仓库：<https://github.com/Fortda/liuhen> · 许可：[MIT](LICENSE)
+仓库：<https://github.com/Fortda/lifeworld-trace> · 许可：[MIT](LICENSE)
 
 数据默认只写本机 `OmniDatabase/`，**不上传**。请勿把 API Key、Cookie、录像或数据库推进 Git。
 
-Windows 壳还在开发和打磨，很多地方会改。**手机端目前几乎没法用**（大量 bug）；仓库里的 `omnitrace_android/` 只是雏形。打算以后在**本机局域网**和电脑联动，现在还没做到能用，也**不会**把数据传到别人的服务器。
+Windows 壳还在开发和打磨，很多地方会改。**手机端目前几乎没法用**（大量 bug）；仓库里的 `lifeworld_trace_android/` 只是雏形。打算以后在**本机局域网**和电脑联动，现在还没做到能用，也**不会**把数据传到别人的服务器。
 
 截图放在下面各功能旁边。
 
 ## 它做什么
 
-- **WinRecorder**（`omnitrace_input.exe`）：在 Windows 后台记录鼠标、键盘、当前在用哪个窗口，以及桌面。关掉播放器窗口，采集仍在后台继续。用来事后回放「当时屏幕上有什么」，也给仪表盘做时间轴和统计。开关在设置页。
+- **WinRecorder**（`lifeworld_trace_input.exe`）：在 Windows 后台记录鼠标、键盘、当前在用哪个窗口，以及桌面。关掉播放器窗口，采集仍在后台继续。用来事后回放「当时屏幕上有什么」，也给仪表盘做时间轴和统计。开关在设置页。
 
   <p align="center"><img src="docs/images/settings.png" alt="设置：WinRecorder 与外观" width="880"></p>
 
@@ -95,7 +95,7 @@ Windows 壳还在开发和打磨，很多地方会改。**手机端目前几乎�
 
   <p align="center"><img src="docs/images/notes-clue.jpg" alt="线索板" width="880"></p>
 
-- **Android**（`omnitrace_android/`）：从 Releases 下载 APK 自己边载的手机试用版，**目前几乎没法用**。数据只留在手机上；以后打算在本机局域网和电脑联动，现在还没有接到 Windows 应用里。
+- **Android**（`lifeworld_trace_android/`）：从 Releases 下载 APK 自己边载的手机试用版，**目前几乎没法用**。数据只留在手机上；以后打算在本机局域网和电脑联动，现在还没有接到 Windows 应用里。
 
 **键盘日志警告：** 采集文件会记下真实按键。把它交给任何云端模型，等于交出密码、私信、验证码和所有打过的字。笔记里的助手不该去读键盘采集文件（`trace_DD.bin`）。如果你扩大助手能用的工具，先确认它仍然看不到按键记录。
 
@@ -122,12 +122,12 @@ flowchart LR
 
 只要日常用，不用装开发环境。需要 **Windows 10 或 11（64 位）**。
 
-1. 打开 [Releases（发布页）](https://github.com/Fortda/liuhen/releases/latest)
-2. 下载 **`Liuhen-…-windows-x64-setup.exe`**（播放器 + 采集器）
-3. 下一步、下一步。默认装到当前用户的 `%LOCALAPPDATA%\OmniTrace`，一般不用管理员（磁盘文件夹名未改，兼容旧版）
+1. 打开 [Releases（发布页）](https://github.com/Fortda/lifeworld-trace/releases/latest)
+2. 下载 **`LifeworldTrace-…-windows-x64-setup.exe`**（播放器 + 采集器）
+3. 下一步、下一步。默认装到当前用户的 `%LOCALAPPDATA%\LifeworldTrace`，一般不用管理员（磁盘文件夹名未改，兼容旧版）
 4. 用桌面上的 **留痕** 打开
 
-数据在你的用户目录 `OmniTrace\OmniDatabase`，**不会上传**，也**不会**打进安装包。卸载（设置 → 应用 → 留痕）只删程序，不删这份数据。
+数据在你的用户目录 `LifeworldTrace\OmniDatabase`，**不会上传**，也**不会**打进安装包。卸载（设置 → 应用 → 留痕）只删程序，不删这份数据。
 
 已用 setup.exe 装过的，留痕会在启动时检查更新，确认后下载完整安装包并安装（不改数据库）。便携 zip 不会在原地自动更新。首次安装仍用 setup.exe。
 
@@ -141,7 +141,7 @@ Windows 可能提示「未知应用」：选 **更多信息 → 仍要运行**�
 
 ### 从源码安装（开发）
 
-稳定版装到 `%LOCALAPPDATA%\OmniTrace`，数据指针指向仓库里的 `OmniDatabase/`：
+稳定版装到 `%LOCALAPPDATA%\LifeworldTrace`，数据指针指向仓库里的 `OmniDatabase/`：
 
 ```powershell
 .\scripts\install-stable.ps1
@@ -155,12 +155,12 @@ Windows 可能提示「未知应用」：选 **更多信息 → 仍要运行**�
 
 这是给普通人边载的试用 APK，**几乎没法用**（大量 bug），不是能天天开着的成品。数据只写在这台手机上，**不会上传**，也**不会**打进 APK。以后才打算在本机局域网和电脑联动，现在没有。
 
-1. 打开 [Releases（发布页）](https://github.com/Fortda/liuhen/releases/latest)
-2. 下载 **`Liuhen-…-android.apk`**
+1. 打开 [Releases（发布页）](https://github.com/Fortda/lifeworld-trace/releases/latest)
+2. 下载 **`LifeworldTrace-…-android.apk`**
 3. 用手机打开这个文件安装（系统会说「未知来源」：允许这一个文件即可）
 4. 国产手机还要在设置里关掉电池优化、打开自启动，否则后台采集很容易被杀掉
 
-不要把手机里的记录传到别人的服务器。若这一版 Release 下面没有 APK，等下一版，或让会编的人在电脑上跑 `omnitrace_android/package.ps1`。
+不要把手机里的记录传到别人的服务器。若这一版 Release 下面没有 APK，等下一版，或让会编的人在电脑上跑 `lifeworld_trace_android/package.ps1`。
 
 ## 文档
 
@@ -187,7 +187,7 @@ Windows 可能提示「未知应用」：选 **更多信息 → 仍要运行**�
 
 ## 贡献
 
-问题与想法请开 [GitHub Issue](https://github.com/Fortda/liuhen/issues)。设置 → 关于与反馈 也可跳到同一入口。
+问题与想法请开 [GitHub Issue](https://github.com/Fortda/lifeworld-trace/issues)。设置 → 关于与反馈 也可跳到同一入口。
 
 请把 `OmniDatabase/`、密钥、录像和提示词原文留在本机。截图约定见 [docs/images/README.md](docs/images/README.md)。
 

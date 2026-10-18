@@ -12,7 +12,7 @@ import type { ClueBoardNode } from "./types.js";
 import { newBoardId, newEdgeId, newNodeId } from "./types.js";
 
 const server = new McpServer({
-  name: "omnitrace-clue-board",
+  name: "lifeworld_trace-clue-board",
   version: "0.1.0",
 });
 

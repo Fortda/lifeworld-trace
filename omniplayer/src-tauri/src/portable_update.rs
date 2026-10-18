@@ -55,7 +55,8 @@ fn paths_eq_ci(a: &Path, b: &Path) -> bool {
         && a.components().count() == b.components().count()
 }
 
-/// `installed`：NSIS 装过（旁有 uninstall.exe），或就在 `%LOCALAPPDATA%\OmniTrace`。
+/// `installed`：NSIS 装过（旁有 uninstall.exe），或就在
+/// `%LOCALAPPDATA%\LifeworldTrace`（旧目录 `%LOCALAPPDATA%\OmniTrace` 同样算已安装）。
 /// 这两种都可以让 Tauri updater 跑签名安装包。其余（便携 zip、`tauri dev`）为 `portable`。
 pub(crate) fn classify_install(exe_dir: &Path, local_app_data: Option<&Path>) -> &'static str {
     if exe_dir.join("uninstall.exe").is_file() || exe_dir.join("Uninstall.exe").is_file() {
@@ -69,7 +70,9 @@ pub(crate) fn classify_install(exe_dir: &Path, local_app_data: Option<&Path>) ->
     };
     let name_ok = exe_dir
         .file_name()
-        .map(|n| n.eq_ignore_ascii_case("OmniTrace"))
+        .map(|n| {
+            n.eq_ignore_ascii_case("LifeworldTrace") || n.eq_ignore_ascii_case("OmniTrace")
+        })
         .unwrap_or(false);
     if name_ok && paths_eq_ci(parent, local) {
         "installed"
@@ -292,12 +295,15 @@ mod tests {
     }
 
     #[test]
-    fn localappdata_omnitrace_counts_as_installed() {
+    fn localappdata_brand_dir_counts_as_installed() {
         let local = std::env::temp_dir().join(format!("liuhen-local-{}", std::process::id()));
-        let dir = local.join("OmniTrace");
         let _ = fs::remove_dir_all(&local);
-        fs::create_dir_all(&dir).unwrap();
-        assert_eq!(classify_install(&dir, Some(&local)), "installed");
+        for name in ["LifeworldTrace", "OmniTrace"] {
+            let dir = local.join(name);
+            fs::create_dir_all(&dir).unwrap();
+            assert_eq!(classify_install(&dir, Some(&local)), "installed");
+            let _ = fs::remove_dir_all(&dir);
+        }
         let _ = fs::remove_dir_all(&local);
     }
 

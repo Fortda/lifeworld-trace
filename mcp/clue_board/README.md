@@ -10,8 +10,8 @@
 | 图片文件 | `<OmniDatabase>/notes/config/clue_images/<file>`（节点只存相对引用 `image`，不是 base64） |
 | 历史日志 | `<OmniDatabase>/notes/config/clue_history/<board_id>.jsonl`（按板 append-only；含 actor=human\|ai；快照只含 `image` 引用，不嵌二进制，回退不删图片文件） |
 | 旧版迁移 | 若仅有 `clue_board.json`，首次读取时按 v1 结构迁移 |
-| 环境变量 | `OMNI_DATABASE` 或 `OMNITRACE_DATA` → 数据根（**必须用绝对路径**；相对路径会跟进程 cwd 走，可能写到错库） |
-| 自动探测 | 仓库 `OmniDatabase/`（按模块路径，不依赖 cwd）→ `%USERPROFILE%/OmniTrace/OmniDatabase` → `Downloads/OmniTrace/OmniDatabase` |
+| 环境变量 | `OMNI_DATABASE` 或 `LIFEWORLD_TRACE_DATA` → 数据根（**必须用绝对路径**；相对路径会跟进程 cwd 走，可能写到错库） |
+| 自动探测 | 仓库 `OmniDatabase/`（按模块路径，不依赖 cwd）→ `%USERPROFILE%/LifeworldTrace/OmniDatabase` → `Downloads/LifeworldTrace/OmniDatabase` |
 
 ## 安装与构建
 
@@ -59,17 +59,17 @@ node dist/index.js
 
 Cursor 读 **`.cursor/mcp.json`**（与 `.cursor/mcp.example.json` 相同：相对仓库根启动 `node mcp/clue_board/dist/index.js`）。`dist/` 不进 git，先 `cd mcp/clue_board && npm install && npm run build`。
 
-**不要**把 `OMNITRACE_DATA` 设成相对路径 `OmniDatabase`（cwd 若不是仓库根会写到别的目录）。默认不设 env：服务器按自身文件位置探测仓库 `OmniDatabase/`（本机 OmniPlayer `data_root.json` 也指向这里）；没有仓库库则用 `%USERPROFILE%\OmniTrace\OmniDatabase`。
+**不要**把 `LIFEWORLD_TRACE_DATA` 设成相对路径 `OmniDatabase`（cwd 若不是仓库根会写到别的目录）。默认不设 env：服务器按自身文件位置探测仓库 `OmniDatabase/`（本机 OmniPlayer `data_root.json` 也指向这里）；没有仓库库则用 `%USERPROFILE%\LifeworldTrace\OmniDatabase`。
 
 若要强制另一套库，在 `mcp.json` 里加**绝对路径**：
 
 ```json
-"env": { "OMNITRACE_DATA": "D:/path/to/OmniDatabase" }
+"env": { "LIFEWORLD_TRACE_DATA": "D:/path/to/OmniDatabase" }
 ```
 
 （exe 旁 `data_root.json` 的 `path`，或用户目录库。）
 
-改完后：**Cursor Settings → MCP → 启用 `omnitrace-clue-board`**（新服务器常默认关），或 Reload Window。
+改完后：**Cursor Settings → MCP → 启用 `lifeworld_trace-clue-board`**（新服务器常默认关），或 Reload Window。
 
 ## Cursor / Claude Desktop 绝对路径示例
 
@@ -78,13 +78,13 @@ Cursor 读 **`.cursor/mcp.json`**（与 `.cursor/mcp.example.json` 相同：相�
 ```json
 {
   "mcpServers": {
-    "omnitrace-clue-board": {
+    "lifeworld_trace-clue-board": {
       "command": "node",
       "args": [
-        "E:/项目/agenticUI和流式笔记尝试/omnitrace_input/mcp/clue_board/dist/index.js"
+        "E:/项目/agenticUI和流式笔记尝试/lifeworld_trace_input/mcp/clue_board/dist/index.js"
       ],
       "env": {
-        "OMNITRACE_DATA": "E:/项目/agenticUI和流式笔记尝试/omnitrace_input/OmniDatabase"
+        "LIFEWORLD_TRACE_DATA": "E:/项目/agenticUI和流式笔记尝试/lifeworld_trace_input/OmniDatabase"
       }
     }
   }
@@ -95,7 +95,7 @@ Cursor 读 **`.cursor/mcp.json`**（与 `.cursor/mcp.example.json` 相同：相�
 
 ## Claude Desktop 配置示例
 
-`claude_desktop_config.json` 中同样添加 `mcpServers.omnitrace-clue-board` 条目，`command` / `args` / `env` 与上相同。
+`claude_desktop_config.json` 中同样添加 `mcpServers.lifeworld_trace-clue-board` 条目，`command` / `args` / `env` 与上相同。
 
 ## 本地 smoke test
 

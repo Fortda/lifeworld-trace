@@ -24,8 +24,11 @@ debug-*.log
 omniplayer/perf-bench-last.json
 
 # Local Windows double-click launchers (keep on disk, not in git)
-/打开 OmniTrace.bat
-/打开 OmniTrace 笔记.bat
+/打开 Lifeworld Trace.bat
+/打开 Lifeworld Trace 笔记.bat
+
+# Local experiment dump exported from OmniDatabase (personal text)
+omniplayer/experiments/notes_timeline_sample.json
 
 # HD screenshot sources (README uses docs/images/)
 /readme图片/

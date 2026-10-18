@@ -6,7 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { repoRoot, resolveDataRoot } from "./paths.js";
 
-const server = new McpServer({ name: "omnitrace-omni-arch", version: "0.1.0" });
+const server = new McpServer({ name: "lifeworld_trace-omni-arch", version: "0.1.0" });
 
 function slug(s: string): string {
   const out = s.replace(/[^a-zA-Z0-9_-]+/g, "_").slice(0, 64);

@@ -7,15 +7,15 @@
 ### Added
 
 - OmniPlayer 桌面壳接入 Tauri 官方 updater：已安装副本在启动时对照 GitHub Release 的 `latest.json`，确认后下载并安装签名过的完整 NSIS（播放器 + 采集器）。便携 zip 只提示去发布页。签名私钥走 GitHub Secrets `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`，公钥在 `tauri.conf.json`。发版步骤见 `docs/releasing.md`。
-- PR / `main` 检查：GitHub Actions `ci`（OmniPlayer 前端 `tsc`+Vite、Windows 采集器 `cargo test`、MCP 构建；线索板带 smoke）。完整 Windows setup.exe / zip 仍只在 `release-windows` / `v*` tag 上打。
 
 ### Changed
 
-- Windows 自动更新改为完整安装包。Tauri 官方 updater 没有可交付的二进制差分，因此不再把 `*-windows-x64-update.zip` 当作更新通道；便携 zip 与 setup.exe 仍会挂到 Release。
+- 英文名由 Liuhen / OmniTrace 统一为 **Lifeworld Trace**（路径与包名用无空格的 `LifeworldTrace` / `lifeworld_trace_*`）。默认程序目录 `%LOCALAPPDATA%\LifeworldTrace`，数据目录 `%USERPROFILE%\LifeworldTrace\OmniDatabase`；仍识别旧 `%USERPROFILE%\OmniTrace` 与环境变量 `OMNITRACE_DATA`。公开仓库改为 <https://github.com/Fortda/lifeworld-trace>。采集 exe 现为 `lifeworld_trace_input.exe`（旁路旧 `omnitrace_input.exe` 仍可启动）。Android 工程目录 `lifeworld_trace_android/`，包名 `com.lifeworldtrace.android`。
+- Windows 自动更新改为完整安装包。Tauri 官方 updater 没有可交付的二进制差分，因此不再把 `*-windows-x64-update.zip` 当作更新通道；便携 zip 与 setup.exe 仍会挂到 Release。清单与安装包地址使用 `Fortda/lifeworld-trace`。
 
 ### Fixed
 
-- MCP `omni_arch`：补上缺失的 `McpServer` 实例，使 `tsc` 能通过。
+- MCP `omni_arch`：补上快照改名时丢掉的 `McpServer` 实例，使 `tsc` 能通过。
 
 ## [0.1.5] - 2026-09-22
 
@@ -29,7 +29,7 @@
 
 ### Changed
 
-- 设置 → **检查更新**：发现新版本后直接确认即可 **应用内下载** 增量 `*-windows-x64-update.zip`（或完整 zip）并替换重启，不必打开浏览器下 setup.exe。首次安装或完整向导重装仍用 `Liuhen-*-windows-x64-setup.exe`。
+- 设置 → **检查更新**：发现新版本后直接确认即可 **应用内下载** 增量 `*-windows-x64-update.zip`（或完整 zip）并替换重启，不必打开浏览器下 setup.exe。首次安装或完整向导重装仍用 `LifeworldTrace-*-windows-x64-setup.exe`。
 - 检查更新文案写明：优先增量包、不改 `OmniDatabase`；启动时检查只提示，下载安装仍走设置里的「检查更新」。
 
 ### Fixed
@@ -40,7 +40,7 @@
 
 ### Changed
 
-- 对外显示名改为 **留痕**（英文 Liuhen）。磁盘数据目录仍为 `%USERPROFILE%\OmniTrace\OmniDatabase`，程序目录仍为 `%LOCALAPPDATA%\OmniTrace`，采集 exe 仍为 `omnitrace_input.exe`（兼容旧路径与自动更新）。公开仓库迁至 <https://github.com/Fortda/liuhen>。新发版安装包文件名为 `Liuhen-*-windows-x64-setup.exe`；旧 Release 上的 `OmniTrace-*` 资源仍可用。
+- 对外显示名改为 **留痕**（英文当时为 Liuhen）。磁盘数据目录仍为 `%USERPROFILE%\OmniTrace\OmniDatabase`，程序目录仍为 `%LOCALAPPDATA%\OmniTrace`，采集 exe 仍为 `omnitrace_input.exe`（兼容旧路径与自动更新）。公开仓库迁至 <https://github.com/Fortda/liuhen>。新发版安装包文件名为 `Liuhen-*-windows-x64-setup.exe`；旧 Release 上的 `OmniTrace-*` 资源仍可用。
 
 ### Added
 
@@ -52,7 +52,7 @@
 
 ### Added
 
-- 给朋友的 Windows **setup.exe**（`OmniTrace-*-windows-x64-setup.exe`）：每用户向导、可选目录（默认 `%LOCALAPPDATA%\OmniTrace`）、桌面/开始菜单快捷方式、HKCU 卸载项；含播放器 **和** 采集器；安装时写 `data_root.json` 指向 `%USERPROFILE%\OmniTrace\OmniDatabase`。包内无库。卸载不删库。zip 仍提供。
+- 给朋友的 Windows **setup.exe**（`LifeworldTrace-*-windows-x64-setup.exe`）：每用户向导、可选目录（默认 `%LOCALAPPDATA%\LifeworldTrace`）、桌面/开始菜单快捷方式、HKCU 卸载项；含播放器 **和** 采集器；安装时写 `data_root.json` 指向 `%USERPROFILE%\LifeworldTrace\OmniDatabase`。包内无库。卸载不删库。zip 仍提供。
 - 设置 → **滚动与缩放**：播放器 / 时间轴滚轮步进与缩放灵敏度，以及「重置为默认」。
 - 设置首页：**对话存档是否由当时对话的 AI 写名称和备注**。
 - 设置页可改 **数据存放位置**（写 exe 旁指针，不搬已有库；采集运行中拒绝）。
@@ -85,8 +85,8 @@
 
 - 运行时库 `OmniDatabase/`、API Key、提示词原文不进 Git。
 
-[Unreleased]: https://github.com/Fortda/liuhen/compare/v0.1.5...HEAD
-[0.1.5]: https://github.com/Fortda/liuhen/releases/tag/v0.1.5
-[0.1.4]: https://github.com/Fortda/liuhen/releases/tag/v0.1.4
-[0.1.3]: https://github.com/Fortda/liuhen/releases/tag/v0.1.3
-[0.1.2]: https://github.com/Fortda/liuhen/releases/tag/v0.1.2
+[Unreleased]: https://github.com/Fortda/lifeworld-trace/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/Fortda/lifeworld-trace/releases/tag/v0.1.5
+[0.1.4]: https://github.com/Fortda/lifeworld-trace/releases/tag/v0.1.4
+[0.1.3]: https://github.com/Fortda/lifeworld-trace/releases/tag/v0.1.3
+[0.1.2]: https://github.com/Fortda/lifeworld-trace/releases/tag/v0.1.2

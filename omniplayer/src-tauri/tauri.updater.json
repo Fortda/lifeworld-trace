@@ -4,10 +4,10 @@
     "targets": ["nsis"],
     "createUpdaterArtifacts": true,
     "publisher": "Fortda",
-    "homepage": "https://github.com/Fortda/liuhen",
+    "homepage": "https://github.com/Fortda/lifeworld-trace",
     "licenseFile": "../../LICENSE",
     "resources": {
-      "resources/omnitrace_input.exe": "omnitrace_input.exe"
+      "resources/lifeworld_trace_input.exe": "lifeworld_trace_input.exe"
     },
     "windows": {
       "nsis": {

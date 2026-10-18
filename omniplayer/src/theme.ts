@@ -1,6 +1,6 @@
 /** 壳外观：跟随系统 / 浅色 / 深色。仅播放器舞台保持黑底；时间轴跟壳层。 */
 
-export const THEME_STORAGE_KEY = "omnitrace.shell.theme";
+export const THEME_STORAGE_KEY = "lifeworld_trace.shell.theme";
 
 export type ThemeChoice = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
@@ -39,7 +39,7 @@ export function applyTheme(choice: ThemeChoice = readThemeChoice()): ThemeChoice
     const el = btn as HTMLElement;
     el.classList.toggle("active", el.dataset.theme === choice);
   });
-  window.dispatchEvent(new Event("omnitrace-theme"));
+  window.dispatchEvent(new Event("lifeworld_trace-theme"));
   return choice;
 }
 

@@ -4,7 +4,7 @@
 import type { NotesCardSummary } from "./notes_types";
 import type { ResearchMeta } from "./notes_research";
 
-const STORAGE_KEY = "omnitrace.notes.timelineFilter";
+const STORAGE_KEY = "lifeworldtrace.notes.timelineFilter";
 
 export type TimelineFilter = {
   showCards: boolean;

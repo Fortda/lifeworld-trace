@@ -605,7 +605,7 @@ function renderForwarderPopoverContent(host: HTMLElement) {
   goSettings.addEventListener("click", (e) => {
     e.stopPropagation();
     closeForwarderPopover();
-    window.dispatchEvent(new CustomEvent("omnitrace-open-llm-settings"));
+    window.dispatchEvent(new CustomEvent("lifeworld_trace-open-llm-settings"));
   });
   host.appendChild(goSettings);
 }

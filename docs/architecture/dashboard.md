@@ -9,7 +9,7 @@
 ## 1. 统计口径入口
 
 - 标题栏「关于」对话框内 `#about-caliber` 分区（静态 HTML，可滚动）。读统计图、时间轴绿条与折线前应对照；图本身不自解释。
-- 偏好：`localStorage omnitrace.dash.showActiveFocus`（「仅有人操作」开才算 `active_focus_usage`）。
+- 偏好：`localStorage lifeworld_trace.dash.showActiveFocus`（「仅有人操作」开才算 `active_focus_usage`）。
 
 ---
 
@@ -20,7 +20,7 @@
 - 健康绿条三点重建（见 [OVERVIEW.md](OVERVIEW.md) §4.6）；程序轴段索引缓存并按像素合并。画布只栅格化条带窗口。
 - **时间轴刻度是日历尺子**（秒/分/时/日/月/年各自进位与像素门槛，大/中/小三档；月初与 15 号嵌在月界之间；禁止 30 天毫秒格）。
 - **同缩放平移**：约 3.2× 宽、2.8× 高离屏条带 `drawImage`（靠近边缘即重烤，惯性平移也烤；缩放惯性仍先拉伸条带）。瓦片 atob+mips 在 Worker；平移中预取行进方向邻日。
-- 指针：图区滚轮或**长按（≈100ms）后左右拖**平移；右侧名称列滚轮上下滚程序行；滚轮/惯性 **rAF 合并**。滚轮平移/Alt 缩放步进读设置子页 `omnitrace.playback.v1`（图上「Alt缩%」为同一偏好的即时入口，不是另一套开关）。
+- 指针：图区滚轮或**长按（≈100ms）后左右拖**平移；右侧名称列滚轮上下滚程序行；滚轮/惯性 **rAF 合并**。滚轮平移/Alt 缩放步进读设置子页 `lifeworld_trace.playback.v1`（图上「Alt缩%」为同一偏好的即时入口，不是另一套开关）。
 - 单次视窗跨度最大约 20 年；**左右平移不按数据/现在封顶**（只挡在 JS Date 可表示范围）。
 - **首帧**：先画 `OmniDatabase/cache/health_report_last.json`；健康段增量 `cache/health_span_state.json`；无缓存时 `dashboard_health({quick:true})` 只啃 `control/module_health.jsonl` 尾 2MB（不把尾扫写入全集缓存），完整扫在后台落盘。
 - 采集器上线区间裁剪 app「假在线」。隐藏时间轴禁止按宽=0 重烤条带。
@@ -32,7 +32,7 @@
 - 近 7 日焦点默认 = 全部 `focus_change` 段（2h 封顶）。
 - **「仅有人操作（去掉 AFK）」**：同一套三张图的口径开关（不是另出三卡）。打开后只计与「有键鼠的 5 分钟格」重叠的时长（格=300s，键鼠=当日 `.otih` 1s 柱 mouse+key，点击/滚轮不计鼠标柱）；无键鼠格视为可能 AFK 去掉。总数据量 / 落盘 JSONL 行不受此开关。`dashboard_stats` 缓存按该参数分 key。
 - **键盘按键频率**（独立卡）：近 7 日本地日 `trace_DD.bin` 仅计按下 `0xFC` 按 VK 聚合 Top 20；缓存 `cache/key_freq/*.otkf`，与 `.otih` 同次扫 bin；不受 AFK 开关影响。
-- 打开统计先画**上次洗数快照**，同时读条强制刷最新（`forceRefresh` 绕过 12s TTL）。切仪表盘子页不重打 IPC：已有 DOM 只显示；`dashboard_stats` 进程内约 12s TTL。
+- 打开统计先画**上次洗数快照**，同时读条强制刷最新（`forceRefresh` 绕过 12s TTL）。切仪表盘子页不重打 IPC：已有 DOM 只显示；`dashboard_stats` 进程内约 12s TTL。焦点柱 / 键频柱 / 应用占比用 DOM（非 canvas），避免洗数重绘时位图被拉伸。
 - **今日模组事件量** = 本地日历日 `events_DD.jsonl` 非空可解析行（不按 kind、不 tail；含 `ime`）；input 键鼠次数另计自 `trace_DD.bin`。健康心跳「今日」按信封 ts 落在当日，禁止把累计 beat 当作今日。
 - **总数据量** = `OmniDatabase/` 各子树字节（盘上 `notes/*.json` 若还在则计入体积；OmniPlayer 不再编辑这些文件）+ 模组 JSONL 总行 + 键鼠累计 + 健康累计。
 - 最新动态轮询（健康尾 + focus/win_map/win_settings/body/ime 各尾，截 60）。

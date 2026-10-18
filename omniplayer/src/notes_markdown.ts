@@ -3,7 +3,7 @@
  * 无第三方 marked；覆盖常用子集即可。
  */
 
-const MD_PREF_KEY = "omnitrace.notes.assistantMarkdown";
+const MD_PREF_KEY = "lifeworldtrace.notes.assistantMarkdown";
 
 /** 默认开：模型常吐 markdown，原文可读性差 */
 export function isAssistantMarkdownOn(): boolean {

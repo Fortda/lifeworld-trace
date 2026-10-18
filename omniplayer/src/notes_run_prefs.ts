@@ -14,7 +14,7 @@ export type RunPrefs = {
   google_search: boolean;
 };
 
-const STORAGE_KEY = "omnitrace.notes.runPrefs";
+const STORAGE_KEY = "lifeworldtrace.notes.runPrefs";
 
 const DEFAULT_PREFS: RunPrefs = {
   thinking: true,

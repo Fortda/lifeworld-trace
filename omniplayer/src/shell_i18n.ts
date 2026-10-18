@@ -8,7 +8,7 @@ import {
 } from "./shell_caliber_plain";
 import type { StringTable } from "./shell_i18n_tables";
 
-export const LANG_STORAGE_KEY = "omnitrace.shell.lang";
+export const LANG_STORAGE_KEY = "lifeworld_trace.shell.lang";
 
 export type LangChoice = "zh-CN" | "en";
 
@@ -60,7 +60,7 @@ const ZH: StringTable = {
   "settings.data.toast.changed": "已改到新位置。原来的数据还在旧文件夹，不会自动搬过来。",
   "settings.data.err.running": "请先停止采集，再改数据存放位置。",
   "settings.data.err.env":
-    "当前由环境变量 OMNITRACE_DATA 指定位置，设置里改文件夹不会生效。请先去掉该环境变量。",
+    "当前由环境变量 LIFEWORLD_TRACE_DATA（或旧名 OMNITRACE_DATA）指定位置，设置里改文件夹不会生效。请先去掉该环境变量。",
   "settings.data.err.exe": "找不到程序所在目录，无法保存位置指针。",
   "settings.data.err.empty": "没有选中文件夹。",
   "settings.data.err.create": "无法创建数据文件夹。",
@@ -248,6 +248,23 @@ const ZH: StringTable = {
   "notes.colorTemp.backspaceToggleHint": "开则把删掉的字显示为灰色；关则只看留下的字。字形仍会落盘。",
   "notes.colorTemp.legendFast": "快",
   "notes.colorTemp.legendSlow": "慢",
+  "notes.send": "发送",
+  "notes.sendKey.title": "发送快捷键",
+  "notes.sendKey.btnTitle": "发送（右键改快捷键）",
+  "notes.sendKey.desc": "未选中的一项用于换行。右键发送按钮可再改。",
+  "notes.sendKey.enter": "Enter 发送",
+  "notes.sendKey.enterHint": "Enter 发送，Shift+Enter 换行",
+  "notes.sendKey.ctrlEnter": "Ctrl+Enter 发送",
+  "notes.sendKey.ctrlEnterHint": "Ctrl+Enter 发送，Enter 换行",
+  "notes.mdEditor.btnTitle": "长文 Markdown 编辑",
+  "notes.mdEditor.title": "长文",
+  "notes.mdEditor.source": "源码",
+  "notes.mdEditor.preview": "预览",
+  "notes.mdEditor.close": "关闭",
+  "notes.mdEditor.done": "完成",
+  "notes.mdEditor.send": "发送",
+  "notes.mdEditor.placeholder": "写长文，支持 Markdown…",
+  "notes.mdEditor.emptyPreview": "（空）",
   "settings.llm.nav.all": "全部",
   "settings.llm.nav.enabled": "已启用",
   "settings.llm.nav.disabled": "未启用",
@@ -274,6 +291,7 @@ const ZH: StringTable = {
   "notes.clue.ctx.newNote": "新建便签",
   "notes.clue.ctx.addImage": "添加图片",
   "notes.clue.ctx.copy": "复制",
+  "notes.clue.ctx.cut": "剪切",
   "notes.clue.ctx.paste": "粘贴",
   "notes.clue.ctx.deleteEdge": "删除这条线",
   "notes.clue.ctx.collapse": "折叠下级",
@@ -414,7 +432,7 @@ const EN: StringTable = {
   "nav.notes": "Notes",
   "shell.about": "About",
   "shell.feedback": "Feedback",
-  "shell.aboutTitle": "About Liuhen",
+  "shell.aboutTitle": "About Lifeworld Trace",
   "shell.feedbackTitle": "Feedback",
   "win.min": "Minimize",
   "win.max": "Maximize",
@@ -457,7 +475,7 @@ const EN: StringTable = {
     "Now using the new folder. Old data stays where it was; nothing is moved automatically.",
   "settings.data.err.running": "Stop capture before changing the data folder.",
   "settings.data.err.env":
-    "The OMNITRACE_DATA environment variable currently sets the folder, so Settings cannot change it. Remove that variable first.",
+    "The LIFEWORLD_TRACE_DATA environment variable (or legacy OMNITRACE_DATA) currently sets the folder, so Settings cannot change it. Remove that variable first.",
   "settings.data.err.exe": "Cannot find the program folder, so the location pointer cannot be saved.",
   "settings.data.err.empty": "No folder selected.",
   "settings.data.err.create": "Could not create the data folder.",
@@ -658,6 +676,23 @@ const EN: StringTable = {
     "On shows deleted characters in gray; off keeps only remaining text. Glyphs still save.",
   "notes.colorTemp.legendFast": "Fast",
   "notes.colorTemp.legendSlow": "Slow",
+  "notes.send": "Send",
+  "notes.sendKey.title": "Send shortcut",
+  "notes.sendKey.btnTitle": "Send (right-click to change shortcut)",
+  "notes.sendKey.desc": "The other choice inserts a newline. Right-click the send button to change this.",
+  "notes.sendKey.enter": "Enter to send",
+  "notes.sendKey.enterHint": "Enter sends, Shift+Enter for a newline",
+  "notes.sendKey.ctrlEnter": "Ctrl+Enter to send",
+  "notes.sendKey.ctrlEnterHint": "Ctrl+Enter sends, Enter for a newline",
+  "notes.mdEditor.btnTitle": "Long-form Markdown editor",
+  "notes.mdEditor.title": "Long note",
+  "notes.mdEditor.source": "Source",
+  "notes.mdEditor.preview": "Preview",
+  "notes.mdEditor.close": "Close",
+  "notes.mdEditor.done": "Done",
+  "notes.mdEditor.send": "Send",
+  "notes.mdEditor.placeholder": "Write a long note. Markdown is supported…",
+  "notes.mdEditor.emptyPreview": "(empty)",
   "settings.llm.nav.all": "All",
   "settings.llm.nav.enabled": "Enabled",
   "settings.llm.nav.disabled": "Disabled",
@@ -684,6 +719,7 @@ const EN: StringTable = {
   "notes.clue.ctx.newNote": "New note",
   "notes.clue.ctx.addImage": "Add image",
   "notes.clue.ctx.copy": "Copy",
+  "notes.clue.ctx.cut": "Cut",
   "notes.clue.ctx.paste": "Paste",
   "notes.clue.ctx.deleteEdge": "Delete this link",
   "notes.clue.ctx.collapse": "Collapse nested",
@@ -905,7 +941,7 @@ export function applyLang(choice: LangChoice = readLangChoice()): LangChoice {
     const el = btn as HTMLElement;
     el.classList.toggle("active", el.dataset.lang === choice);
   });
-  window.dispatchEvent(new Event("omnitrace-lang"));
+  window.dispatchEvent(new Event("lifeworld_trace-lang"));
   return choice;
 }
 

@@ -3,10 +3,10 @@
 # 便携发布约定：
 # - 产出目录只放程序与说明（OmniPlayer.exe、采集 exe、bat、使用说明等）
 # - 切勿把运行时数据根 OmniDatabase 打进发布包（发布物与数据根分离）
-# - 稳定版：-Install → %LOCALAPPDATA%\OmniTrace（磁盘目录名兼容旧版）+ 桌面「留痕」快捷方式 + HKCU 卸载项（DisplayName=留痕）
+# - 稳定版：-Install → %LOCALAPPDATA%\LifeworldTrace（磁盘目录名兼容旧版）+ 桌面「留痕」快捷方式 + HKCU 卸载项（DisplayName=留痕）
 # - 签名更新：tauri build 叠加 tauri.updater.json，把采集 exe 打进 NSIS，
 #   并用 TAURI_SIGNING_PRIVATE_KEY 签出 setup.exe + latest.json（完整包，不是差分）。
-#   没配私钥时仍打便携 zip，并用旧的 omnitrace.nsi 打 setup.exe（那一份不能当 updater 载荷）。
+#   没配私钥时仍打便携 zip，并用 package/lifeworld_trace.nsi 打 setup.exe（那一份不能当 updater 载荷）。
 # - 本机 -Install：若稳定版在跑则写入 incoming（不改 OmniDatabase）
 #
 param(
@@ -20,20 +20,20 @@ Set-Location $Root
 
 $Repo = Split-Path -Parent $Root
 $Dist = Join-Path $Repo "dist\OmniPlayer"
-$InstallDir = Join-Path $env:LOCALAPPDATA "OmniTrace"
+$InstallDir = Join-Path $env:LOCALAPPDATA "LifeworldTrace"
 $IncomingDir = Join-Path $InstallDir "incoming"
 $DbRoot = Join-Path $Repo "OmniDatabase"
 
 function Copy-ReleaseBits([string]$Dest) {
   New-Item -ItemType Directory -Force -Path $Dest | Out-Null
   Copy-Item (Join-Path $Dist "OmniPlayer.exe") (Join-Path $Dest "OmniPlayer.exe") -Force
-  $rec = Join-Path $Dist "omnitrace_input.exe"
+  $rec = Join-Path $Dist "lifeworld_trace_input.exe"
   if (Test-Path $rec) {
-    Copy-Item $rec (Join-Path $Dest "omnitrace_input.exe") -Force
+    Copy-Item $rec (Join-Path $Dest "lifeworld_trace_input.exe") -Force
   }
   $ico = Join-Path $Root "src-tauri\icons\icon.ico"
   if (Test-Path $ico) {
-    Copy-Item $ico (Join-Path $Dest "OmniTrace.ico") -Force
+    Copy-Item $ico (Join-Path $Dest "LifeworldTrace.ico") -Force
   }
   Get-ChildItem (Join-Path $Root "package") -File | ForEach-Object {
     Copy-Item $_.FullName (Join-Path $Dest $_.Name) -Force
@@ -49,7 +49,7 @@ function Write-DataRootPointer([string]$Dest) {
 
 function Install-UninstallKey([string]$Version) {
   $uninst = Join-Path $InstallDir "uninstall.ps1"
-  $key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OmniTrace"
+  $key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LifeworldTrace"
   $uninstCmd = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + $uninst + '"'
   New-Item -Path $key -Force | Out-Null
   New-ItemProperty -Path $key -Name "DisplayName" -Value "留痕" -PropertyType String -Force | Out-Null
@@ -63,9 +63,9 @@ function Install-UninstallKey([string]$Version) {
 
 function Write-UninstallScript {
   $desk = Join-Path ([Environment]::GetFolderPath("Desktop")) "留痕.lnk"
-  $deskLegacy = Join-Path ([Environment]::GetFolderPath("Desktop")) "OmniTrace.lnk"
+  $deskLegacy = Join-Path ([Environment]::GetFolderPath("Desktop")) "LifeworldTrace.lnk"
   $startDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\留痕"
-  $startLegacy = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\OmniTrace"
+  $startLegacy = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\LifeworldTrace"
   $lines = @(
     '$ErrorActionPreference = ''Continue''',
     ('$install = ''' + $InstallDir + ''''),
@@ -73,7 +73,7 @@ function Write-UninstallScript {
     ('$deskLegacy = ''' + $deskLegacy + ''''),
     ('$startDir = ''' + $startDir + ''''),
     ('$startLegacy = ''' + $startLegacy + ''''),
-    '$key = ''HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OmniTrace''',
+    '$key = ''HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LifeworldTrace''',
     'Remove-Item $desk -Force -ErrorAction SilentlyContinue',
     'Remove-Item $deskLegacy -Force -ErrorAction SilentlyContinue',
     'Remove-Item $startDir -Recurse -Force -ErrorAction SilentlyContinue',
@@ -95,7 +95,7 @@ function New-Shortcut([string]$LinkPath, [string]$Target, [string]$WorkDir) {
   $sc.TargetPath = $Target
   $sc.WorkingDirectory = $WorkDir
   $sc.Description = "留痕"
-  $ico = Join-Path $WorkDir "OmniTrace.ico"
+  $ico = Join-Path $WorkDir "LifeworldTrace.ico"
   if (Test-Path $ico) { $sc.IconLocation = "$ico,0" }
   $sc.Save()
 }
@@ -130,7 +130,7 @@ function Publish-PortableZip([string]$Version) {
 
   $distRoot = Join-Path $Repo "dist"
   $wrap = Join-Path $distRoot "_zip_stage"
-  $stage = Join-Path $wrap "Liuhen"
+  $stage = Join-Path $wrap "Lifeworld Trace"
   if (Test-Path -LiteralPath $wrap) {
     Remove-Item -LiteralPath $wrap -Recurse -Force
   }
@@ -144,7 +144,7 @@ function Publish-PortableZip([string]$Version) {
     Write-Error "portable zip: OmniPlayer.exe missing under $Dist"
     exit 1
   }
-  $zip = Join-Path $distRoot ("Liuhen-" + $Version + "-windows-x64.zip")
+  $zip = Join-Path $distRoot ("LifeworldTrace-" + $Version + "-windows-x64.zip")
   if (Test-Path -LiteralPath $zip) {
     Remove-Item -LiteralPath $zip -Force
   }
@@ -169,11 +169,11 @@ function Publish-SignedNsis([string]$Version) {
   }
   $distRoot = Join-Path $Repo "dist"
   New-Item -ItemType Directory -Force -Path $distRoot | Out-Null
-  $name = "Liuhen-" + $Version + "-windows-x64-setup.exe"
+  $name = "LifeworldTrace-" + $Version + "-windows-x64-setup.exe"
   $dest = Join-Path $distRoot $name
   Copy-Item -LiteralPath $setup.FullName -Destination $dest -Force
   Copy-Item -LiteralPath $sigPath -Destination ($dest + ".sig") -Force
-  $url = "https://github.com/Fortda/liuhen/releases/download/v" + $Version + "/" + $name
+  $url = "https://github.com/Fortda/lifeworld-trace/releases/download/v" + $Version + "/" + $name
   $manifest = Join-Path $distRoot "latest.json"
   $notes = "Full Windows installer (player + recorder). OmniDatabase is not modified."
   & node (Join-Path $Root "scripts\write-updater-manifest.mjs") `
@@ -198,13 +198,13 @@ function Resolve-Makensis {
   foreach ($p in @(
       (Join-Path ${env:ProgramFiles(x86)} "NSIS\makensis.exe"),
       (Join-Path $env:ProgramFiles "NSIS\makensis.exe"),
-      (Join-Path $env:LOCALAPPDATA "OmniTrace-build\nsis-3.10\makensis.exe"),
+      (Join-Path $env:LOCALAPPDATA "LifeworldTrace-build\nsis-3.10\makensis.exe"),
       (Join-Path $env:LOCALAPPDATA "tauri\NSIS\makensis.exe")
     )) {
     if ($p -and (Test-Path -LiteralPath $p)) { return $p }
   }
 
-  $tools = Join-Path $env:LOCALAPPDATA "OmniTrace-build"
+  $tools = Join-Path $env:LOCALAPPDATA "LifeworldTrace-build"
   $zip = Join-Path $tools "nsis-3.10.zip"
   $out = Join-Path $tools "nsis-3.10"
   New-Item -ItemType Directory -Force -Path $tools | Out-Null
@@ -247,32 +247,32 @@ function Resolve-Makensis {
 
 function Publish-SetupExe([string]$Version) {
   $player = Join-Path $Dist "OmniPlayer.exe"
-  $rec = Join-Path $Dist "omnitrace_input.exe"
+  $rec = Join-Path $Dist "lifeworld_trace_input.exe"
   if (-not (Test-Path -LiteralPath $player)) {
     Write-Error "setup.exe: OmniPlayer.exe missing under $Dist"
     exit 1
   }
   if (-not (Test-Path -LiteralPath $rec)) {
-    Write-Error "setup.exe: omnitrace_input.exe missing — friend installer must include the recorder"
+    Write-Error "setup.exe: lifeworld_trace_input.exe missing — friend installer must include the recorder"
     exit 1
   }
 
   $makensis = Resolve-Makensis
-  $nsi = Join-Path $Root "package\omnitrace.nsi"
+  $nsi = Join-Path $Root "package\lifeworld_trace.nsi"
   $license = Join-Path $Repo "LICENSE"
   if (-not (Test-Path -LiteralPath $nsi)) { Write-Error "missing $nsi"; exit 1 }
   if (-not (Test-Path -LiteralPath $license)) { Write-Error "missing $license"; exit 1 }
 
   # Stage on an ASCII path so makensis does not choke on the repo folder name.
-  $stage = Join-Path $env:LOCALAPPDATA "OmniTrace-build\setup-stage"
+  $stage = Join-Path $env:LOCALAPPDATA "LifeworldTrace-build\setup-stage"
   if (Test-Path -LiteralPath $stage) {
     Remove-Item -LiteralPath $stage -Recurse -Force
   }
   New-Item -ItemType Directory -Force -Path $stage | Out-Null
   foreach ($name in @(
       "OmniPlayer.exe",
-      "omnitrace_input.exe",
-      "OmniTrace.ico",
+      "lifeworld_trace_input.exe",
+      "LifeworldTrace.ico",
       "VERSION.txt",
       "write-data-root.ps1"
     )) {
@@ -286,25 +286,25 @@ function Publish-SetupExe([string]$Version) {
   } | Select-Object -First 1 | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $stage "Readme.txt") -Force
   }
-  Copy-Item -LiteralPath $nsi -Destination (Join-Path $stage "omnitrace.nsi") -Force
+  Copy-Item -LiteralPath $nsi -Destination (Join-Path $stage "lifeworld_trace.nsi") -Force
   Copy-Item -LiteralPath $license -Destination (Join-Path $stage "LICENSE") -Force
   $icoSrc = Join-Path $Root "src-tauri\icons\icon.ico"
   if (Test-Path -LiteralPath $icoSrc) {
-    Copy-Item -LiteralPath $icoSrc -Destination (Join-Path $stage "OmniTrace.ico") -Force
+    Copy-Item -LiteralPath $icoSrc -Destination (Join-Path $stage "LifeworldTrace.ico") -Force
   }
   if (-not (Test-Path -LiteralPath (Join-Path $stage "write-data-root.ps1"))) {
     Copy-Item -LiteralPath (Join-Path $Root "package\write-data-root.ps1") -Destination (Join-Path $stage "write-data-root.ps1") -Force
   }
 
-  $setupName = "Liuhen-" + $Version + "-windows-x64-setup.exe"
+  $setupName = "LifeworldTrace-" + $Version + "-windows-x64-setup.exe"
   $setupOut = Join-Path $stage $setupName
   $argOut = "/DOUTFILE=$setupName"
   $argVer = "/DPRODUCT_VERSION=$Version"
   $argLic = "/DLICENSE_FILE=LICENSE"
-  $argIco = "/DICON_FILE=OmniTrace.ico"
+  $argIco = "/DICON_FILE=LifeworldTrace.ico"
   Push-Location $stage
   try {
-    & $makensis /INPUTCHARSET UTF8 $argVer $argOut $argLic $argIco "omnitrace.nsi"
+    & $makensis /INPUTCHARSET UTF8 $argVer $argOut $argLic $argIco "lifeworld_trace.nsi"
     if ($LASTEXITCODE -ne 0) {
       Write-Error "makensis exit $LASTEXITCODE"
       exit 1
@@ -334,23 +334,23 @@ if (-not $SkipBuild) {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   }
 
-  Write-Host "==> cargo build --release omnitrace_input (bundled into the NSIS installer)..." -ForegroundColor Cyan
+  Write-Host "==> cargo build --release lifeworld_trace_input (bundled into the NSIS installer)..." -ForegroundColor Cyan
   Push-Location $Repo
   try {
     $env:CARGO_TARGET_DIR = Join-Path $Repo "target"
-    cargo build --release --bin omnitrace_input
+    cargo build --release --bin lifeworld_trace_input
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   } finally {
     Pop-Location
   }
-  $stagedRecorder = Join-Path $Repo "target\release\omnitrace_input.exe"
+  $stagedRecorder = Join-Path $Repo "target\release\lifeworld_trace_input.exe"
   if (-not (Test-Path -LiteralPath $stagedRecorder)) {
-    Write-Error "omnitrace_input.exe missing; the installer must include the recorder"
+    Write-Error "lifeworld_trace_input.exe missing; the installer must include the recorder"
     exit 1
   }
   $resDir = Join-Path $Root "src-tauri\resources"
   New-Item -ItemType Directory -Force -Path $resDir | Out-Null
-  Copy-Item -LiteralPath $stagedRecorder -Destination (Join-Path $resDir "omnitrace_input.exe") -Force
+  Copy-Item -LiteralPath $stagedRecorder -Destination (Join-Path $resDir "lifeworld_trace_input.exe") -Force
 
   $confText = Get-Content (Join-Path $Root "src-tauri\tauri.conf.json") -Raw -Encoding UTF8
   $pubkeyPlaceholder = $confText -match "REPLACE_WITH_OUTPUT_OF_tauri_signer_generate"
@@ -415,18 +415,18 @@ Need feature custom-protocol on tauri. Built: $BuiltExe
 }
 Write-Host "cfg(dev) check OK ($($latestAppBuild.Name))" -ForegroundColor Green
 
-$RecorderExe = Join-Path $Repo "target\release\omnitrace_input.exe"
+$RecorderExe = Join-Path $Repo "target\release\lifeworld_trace_input.exe"
 if (-not (Test-Path $RecorderExe)) {
-  $alt = Join-Path $ReleaseDir "omnitrace_input.exe"
+  $alt = Join-Path $ReleaseDir "lifeworld_trace_input.exe"
   if (Test-Path $alt) { $RecorderExe = $alt }
 }
 
 New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 Copy-Item $BuiltExe (Join-Path $Dist "OmniPlayer.exe") -Force
 if (Test-Path $RecorderExe) {
-  Copy-Item $RecorderExe (Join-Path $Dist "omnitrace_input.exe") -Force
+  Copy-Item $RecorderExe (Join-Path $Dist "lifeworld_trace_input.exe") -Force
 } else {
-  Write-Error "omnitrace_input.exe not found; friend setup.exe and zip must include the recorder"
+  Write-Error "lifeworld_trace_input.exe not found; friend setup.exe and zip must include the recorder"
   exit 1
 }
 Get-ChildItem (Join-Path $Root "package") -File | Where-Object {
@@ -436,11 +436,11 @@ Get-ChildItem (Join-Path $Root "package") -File | Where-Object {
 }
 $ico = Join-Path $Root "src-tauri\icons\icon.ico"
 if (Test-Path $ico) {
-  Copy-Item $ico (Join-Path $Dist "OmniTrace.ico") -Force
+  Copy-Item $ico (Join-Path $Dist "LifeworldTrace.ico") -Force
 }
 
 # Signed release: Tauri NSIS (player + recorder resource) is the setup.exe the updater installs.
-# Without a signing key, fall back to package/omnitrace.nsi. That legacy exe is not an updater payload.
+# Without a signing key, fall back to package/lifeworld_trace.nsi. That legacy exe is not an updater payload.
 
 Write-Host ""
 Write-Host "portable folder:" -ForegroundColor Green
@@ -477,8 +477,8 @@ if ($running) {
   Write-UninstallScript
   Install-UninstallKey (Get-AppVersion)
   $exe = Join-Path $InstallDir "OmniPlayer.exe"
-  $deskLegacy = Join-Path ([Environment]::GetFolderPath("Desktop")) "OmniTrace.lnk"
-  $startLegacy = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\OmniTrace"
+  $deskLegacy = Join-Path ([Environment]::GetFolderPath("Desktop")) "LifeworldTrace.lnk"
+  $startLegacy = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\LifeworldTrace"
   Remove-Item $deskLegacy -Force -ErrorAction SilentlyContinue
   Remove-Item $startLegacy -Recurse -Force -ErrorAction SilentlyContinue
   New-Shortcut (Join-Path ([Environment]::GetFolderPath("Desktop")) "留痕.lnk") $exe $InstallDir

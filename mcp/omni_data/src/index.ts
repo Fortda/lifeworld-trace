@@ -6,7 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { resolveDataRoot } from "./paths.js";
 
-const server = new McpServer({ name: "omnitrace-omni-data", version: "0.1.0" });
+const server = new McpServer({ name: "lifeworld_trace-omni-data", version: "0.1.0" });
 
 function jsonText(obj: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(obj, null, 2) }] };
