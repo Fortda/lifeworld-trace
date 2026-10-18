@@ -163,7 +163,7 @@ let boards: ClueBoard[] = [];
 let clueAppsHosted = false;
 
 /** Fired after the board registry UI would refresh (switch / rename / create / load). */
-export const CLUE_BOARDS_UI_EVENT = "omnitrace-clue-boards-changed";
+export const CLUE_BOARDS_UI_EVENT = "lifeworld_trace-clue-boards-changed";
 
 export type ClueBoardSummary = { id: string; title: string };
 
@@ -336,6 +336,8 @@ let pasteSeq = 0;
 let memoryClipboard: ClueClipboardPayload | null = null;
 /** True when OS clipboard write failed and in-app paste should trust memoryClipboard. */
 let memoryClipboardUnsynced = false;
+/** Last pointer client coords (for paste-at-cursor). */
+let lastPointerClient: { x: number; y: number } | null = null;
 /** Set when Ctrl+V should hit the board; cleared if the paste event handles it. */
 let pendingPasteFallback = false;
 /** Note id armed by Ctrl+V in a note textarea; cleared when paste attaches or pastes text. */
@@ -2318,6 +2320,12 @@ function selectNodes(ids: string[]) {
   scheduleDrawClueWires();
 }
 
+/** 当前板可见便签全选（折叠藏起的子孙不进选区）。 */
+function selectAllVisibleNotes() {
+  const hidden = hiddenNodeIdSet();
+  selectNodes(nodes.filter((n) => !hidden.has(n.id)).map((n) => n.id));
+}
+
 function clearSelection() {
   selectedIds.clear();
   selectedEdgeIds.clear();
@@ -2427,6 +2435,12 @@ function ensureClueContextMenu(): HTMLElement {
   copyBtn.setAttribute("role", "menuitem");
   copyBtn.textContent = shellT("notes.clue.ctx.copy");
 
+  const cutBtn = document.createElement("button");
+  cutBtn.type = "button";
+  cutBtn.dataset.action = "cut";
+  cutBtn.setAttribute("role", "menuitem");
+  cutBtn.textContent = shellT("notes.clue.ctx.cut");
+
   const pasteBtn = document.createElement("button");
   pasteBtn.type = "button";
   pasteBtn.dataset.action = "paste";
@@ -2463,6 +2477,7 @@ function ensureClueContextMenu(): HTMLElement {
     newNoteBtn,
     addImageBtn,
     copyBtn,
+    cutBtn,
     pasteBtn,
     delEdgeBtn,
     collapseBtn,
@@ -2490,8 +2505,9 @@ function ensureClueContextMenu(): HTMLElement {
         pt ??
         (node ? { x: node.x + CLUE_PASTE_STEP, y: node.y + CLUE_PASTE_STEP } : null);
       openImageFilePicker(at);
-    } else if (action === "copy") void copySelectedNotes();
-    else if (action === "paste") void pasteClueFromClipboard(pt);
+    }     else if (action === "copy") void copySelectedNotes();
+    else if (action === "cut") void cutSelectedNotes();
+    else if (action === "paste") void pasteClueFromClipboard(pt ?? pasteAnchorFromPointer());
     else if (action === "delete-edge" && edgeId) deleteEdgeById(edgeId);
     else if (action === "toggle-fold" && nodeId) toggleNodeCollapsed(nodeId);
     else if (action === "adopt-selected" && nodeId) adoptSelectedAsChildren(nodeId);
@@ -2508,6 +2524,7 @@ function refreshClueContextMenuLabels() {
   const newNoteBtn = menu.querySelector<HTMLButtonElement>('button[data-action="new-note"]');
   const addImageBtn = menu.querySelector<HTMLButtonElement>('button[data-action="add-image"]');
   const copyBtn = menu.querySelector<HTMLButtonElement>('button[data-action="copy"]');
+  const cutBtn = menu.querySelector<HTMLButtonElement>('button[data-action="cut"]');
   const pasteBtn = menu.querySelector<HTMLButtonElement>('button[data-action="paste"]');
   const delEdgeBtn = menu.querySelector<HTMLButtonElement>('button[data-action="delete-edge"]');
   const collapseBtn = menu.querySelector<HTMLButtonElement>('button[data-action="toggle-fold"]');
@@ -2517,6 +2534,7 @@ function refreshClueContextMenuLabels() {
   if (newNoteBtn) newNoteBtn.textContent = shellT("notes.clue.ctx.newNote");
   if (addImageBtn) addImageBtn.textContent = shellT("notes.clue.ctx.addImage");
   if (copyBtn) copyBtn.textContent = shellT("notes.clue.ctx.copy");
+  if (cutBtn) cutBtn.textContent = shellT("notes.clue.ctx.cut");
   if (pasteBtn) pasteBtn.textContent = shellT("notes.clue.ctx.paste");
   if (delEdgeBtn) delEdgeBtn.textContent = shellT("notes.clue.ctx.deleteEdge");
   if (collapseBtn) {
@@ -2540,6 +2558,7 @@ function openClueContextMenu(
   const newNoteBtn = menu.querySelector<HTMLButtonElement>('button[data-action="new-note"]');
   const addImageBtn = menu.querySelector<HTMLButtonElement>('button[data-action="add-image"]');
   const copyBtn = menu.querySelector<HTMLButtonElement>('button[data-action="copy"]');
+  const cutBtn = menu.querySelector<HTMLButtonElement>('button[data-action="cut"]');
   const pasteBtn = menu.querySelector<HTMLButtonElement>('button[data-action="paste"]');
   const delEdgeBtn = menu.querySelector<HTMLButtonElement>('button[data-action="delete-edge"]');
   const collapseBtn = menu.querySelector<HTMLButtonElement>('button[data-action="toggle-fold"]');
@@ -2551,6 +2570,10 @@ function openClueContextMenu(
   if (copyBtn) {
     copyBtn.hidden = mode === "edge";
     copyBtn.disabled = selectedIds.size === 0;
+  }
+  if (cutBtn) {
+    cutBtn.hidden = mode === "edge";
+    cutBtn.disabled = selectedIds.size === 0;
   }
   if (pasteBtn) pasteBtn.hidden = mode === "edge";
   if (delEdgeBtn) delEdgeBtn.hidden = mode !== "edge";
@@ -3033,13 +3056,13 @@ function renderNodes() {
 
     ta.addEventListener("input", () => {
       const hit = nodeById(n.id);
+      glyphHandle.onInput();
       if (hit) {
-        hit.text = ta.value;
+        hit.text = glyphHandle.semantic();
         scheduleSave();
         scheduleTextHistory();
       }
-      glyphHandle.onInput();
-      dotLabel.textContent = clueDotLabel(ta.value, hit ?? n);
+      dotLabel.textContent = clueDotLabel(hit?.text ?? glyphHandle.semantic(), hit ?? n);
     });
     ta.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
@@ -3413,6 +3436,24 @@ function viewCenterForImage(): { x: number; y: number } {
   };
 }
 
+/** Paste under the pointer when it is over the board; else viewport center. */
+function pasteAnchorFromPointer(): { x: number; y: number } {
+  if (!lastPointerClient) return viewCenterForImage();
+  const board = boardEl();
+  if (!board) return clientToCanvas(lastPointerClient.x, lastPointerClient.y);
+  const br = board.getBoundingClientRect();
+  const { x, y } = lastPointerClient;
+  if (x < br.left || x > br.right || y < br.top || y > br.bottom) {
+    return viewCenterForImage();
+  }
+  return clientToCanvas(x, y);
+}
+
+function onCluePointerTrack(e: PointerEvent) {
+  if (!clueModeActive) return;
+  lastPointerClient = { x: e.clientX, y: e.clientY };
+}
+
 async function fillClueImage(img: HTMLImageElement, ref: string) {
   const cached = imageSrcCache.get(ref);
   if (cached) {
@@ -3569,9 +3610,9 @@ function clipboardPayloadFromSelection(): ClueClipboardPayload | null {
   };
 }
 
-async function copySelectedNotes() {
+async function writeSelectionToClipboard(): Promise<ClueClipboardPayload | null> {
   const payload = clipboardPayloadFromSelection();
-  if (!payload) return;
+  if (!payload) return null;
   memoryClipboard = payload;
   pasteSeq = 0;
   const html = encodeClueClipboardHtml(payload);
@@ -3588,11 +3629,45 @@ async function copySelectedNotes() {
     console.error(err);
     memoryClipboardUnsynced = true;
   }
+  return payload;
+}
+
+async function copySelectedNotes() {
+  const payload = await writeSelectionToClipboard();
+  if (!payload) return;
   const count = payload.nodes.length;
   showHint(
     count > 1
       ? t(`已复制 ${count} 条`, `Copied ${count} notes`)
       : t("已复制便签", "Copied note")
+  );
+}
+
+async function cutSelectedNotes() {
+  const payload = await writeSelectionToClipboard();
+  if (!payload) return;
+  const ids = [...selectedIds];
+  if (!ids.length) return;
+  const idSet = new Set(ids);
+  for (const n of nodes) {
+    if (n.parentId && idSet.has(n.parentId) && !idSet.has(n.id)) delete n.parentId;
+  }
+  for (const id of ids) {
+    nodes = nodes.filter((n) => n.id !== id);
+    edges = edges.filter((e) => e.from !== id && e.to !== id);
+    if (pendingFrom === id) cancelWirePick();
+    selectedIds.delete(id);
+  }
+  pruneSelectedEdgeIds();
+  renderNodes();
+  recordClueHistory(CLUE_HISTORY_LABELS.cut);
+  scheduleSave();
+  scheduleDrawClueWires();
+  const count = payload.nodes.length;
+  showHint(
+    count > 1
+      ? t(`已剪切 ${count} 条`, `Cut ${count} notes`)
+      : t("已剪切便签", "Cut note")
   );
 }
 
@@ -3766,11 +3841,12 @@ function onCluePaste(e: ClipboardEvent) {
   if (!payload?.nodes.length && !imageFile) return;
   pendingPasteFallback = false;
   e.preventDefault();
+  const at = pasteAnchorFromPointer();
   if (payload?.nodes.length) {
-    pastePayload(payload, null);
+    pastePayload(payload, at);
     return;
   }
-  if (imageFile) void addImageFilesAt([imageFile], viewCenterForImage());
+  if (imageFile) void addImageFilesAt([imageFile], at);
 }
 
 function onClueDragOver(e: DragEvent) {
@@ -4167,11 +4243,11 @@ function onKeyDown(e: KeyboardEvent) {
     clueModeActive &&
     mod &&
     e.key.toLowerCase() === "a" &&
-    isBoardListPanelFocused() &&
     !isTextEditingField(document.activeElement)
   ) {
     e.preventDefault();
-    selectAllBoardsInList();
+    if (isBoardListPanelFocused()) selectAllBoardsInList();
+    else selectAllVisibleNotes();
     return;
   }
   const active = document.activeElement;
@@ -4186,6 +4262,11 @@ function onKeyDown(e: KeyboardEvent) {
   if (shortcut === "copy-notes") {
     e.preventDefault();
     void copySelectedNotes();
+    return;
+  }
+  if (shortcut === "cut-notes") {
+    e.preventDefault();
+    void cutSelectedNotes();
     return;
   }
   if (shortcut === "paste-field") {
@@ -4207,7 +4288,7 @@ function onKeyDown(e: KeyboardEvent) {
     requestAnimationFrame(() => {
       if (!pendingPasteFallback) return;
       pendingPasteFallback = false;
-      void pasteClueFromClipboard(null);
+      void pasteClueFromClipboard(pasteAnchorFromPointer());
     });
     return;
   }
@@ -4312,11 +4393,12 @@ export function initClueBoard() {
   wires?.addEventListener("contextmenu", onClueViewContextMenu, true);
   document.addEventListener("pointerdown", onDocPointerDown, true);
   window.addEventListener("pointermove", onWirePointerMove);
+  window.addEventListener("pointermove", onCluePointerTrack, { passive: true });
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("paste", onCluePaste, true);
 
   window.addEventListener("resize", () => scheduleDrawClueWires());
-  window.addEventListener("omnitrace-lang", () => {
+  window.addEventListener("lifeworld_trace-lang", () => {
     renderNodes();
     renderBoardList();
     refreshClueContextMenuLabels();

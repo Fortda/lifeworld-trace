@@ -86,7 +86,7 @@ pub fn write_data_root_pointer() {
     ensure_dir(&control_dir());
     let _ = std::fs::write(control_dir().join("data_root.txt"), &text);
     if let Ok(local) = std::env::var("LOCALAPPDATA") {
-        let dir = PathBuf::from(local).join("OmniTrace");
+        let dir = PathBuf::from(local).join("LifeworldTrace");
         let _ = create_dir_all(&dir);
         let _ = std::fs::write(dir.join("data_root.txt"), &text);
     }

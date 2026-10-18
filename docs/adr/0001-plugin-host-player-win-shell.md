@@ -1,7 +1,7 @@
 # ADR-0001：进程内插件框架 + OmniPlayer 直播预览 + Win 壳层
 
 - **日期**：2026-08-03
-- **版本**：omnitrace_input 0.2.x / OmniPlayer 无边框 PotPlayer 式 UI
+- **版本**：lifeworld_trace_input 0.2.x / OmniPlayer 无边框 PotPlayer 式 UI
 
 ## 1. 要解决什么
 
@@ -9,7 +9,7 @@
 
 ## 2. 背景
 
-早期是 `omnitrace_input` + `win_context` 两个进程、相对路径写库；后又有过产品化封装尝试。方向定为自用优先、插件融合、用播放器可视化迭代，并扩到桌面壳（壁纸 / 任务栏 / 多屏）。
+早期是 `lifeworld_trace_input` + `win_context` 两个进程、相对路径写库；后又有过产品化封装尝试。方向定为自用优先、插件融合、用播放器可视化迭代，并扩到桌面壳（壁纸 / 任务栏 / 多屏）。
 
 ## 3. 决策
 

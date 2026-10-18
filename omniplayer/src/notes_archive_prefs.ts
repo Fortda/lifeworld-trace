@@ -2,8 +2,8 @@
  * 对话存档命名偏好：当时对话的 AI vs 指定总结模型。
  * 设置首页为开关面；连线存档保存对话框读同一 localStorage。
  */
-export const ARCHIVE_NAMING_KEY = "omnitrace.notes.archiveNaming.v1";
-const LEGACY_AUTO_NOTE_KEY = "omnitrace.notes.autoPresetNote";
+export const ARCHIVE_NAMING_KEY = "lifeworldtrace.notes.archiveNaming.v1";
+const LEGACY_AUTO_NOTE_KEY = "lifeworldtrace.notes.autoPresetNote";
 export const NONE_MODEL_KEY = "none";
 
 export type ArchiveNamingPrefs = {
@@ -62,7 +62,7 @@ export function setArchiveNamingPrefs(
     /* ignore */
   }
   window.dispatchEvent(
-    new CustomEvent("omnitrace-archive-naming", { detail: next })
+    new CustomEvent("lifeworld_trace-archive-naming", { detail: next })
   );
   return next;
 }
@@ -152,8 +152,8 @@ export function initArchiveNamingSettings() {
         summarizerModelKey: (e.target as HTMLSelectElement).value,
       });
     });
-  window.addEventListener("omnitrace-archive-naming", () => syncArchiveNamingUi());
-  window.addEventListener("omnitrace-lang", () => syncArchiveNamingUi());
+  window.addEventListener("lifeworld_trace-archive-naming", () => syncArchiveNamingUi());
+  window.addEventListener("lifeworld_trace-lang", () => syncArchiveNamingUi());
   if (!getArchiveNamingPrefs().useConversationAi) {
     void fillSummarizerSelect();
   }

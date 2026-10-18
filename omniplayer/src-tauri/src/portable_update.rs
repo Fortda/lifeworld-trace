@@ -1,7 +1,7 @@
 //! 便携增量更新：只替换 OmniPlayer.exe（及旁路采集 exe），绝不触碰 OmniDatabase。
 //!
-//! GitHub owner/repo 与前端 `shell_links.ts` 对齐（Fortda/liuhen）。
-//! 仓库尚未 rename 时 latest API 会 404。旧资源名 `OmniTrace-*` 仍认。
+//! GitHub owner/repo 与前端 `shell_links.ts` 对齐（Fortda/lifeworld-trace）。
+//! 仓库尚未 rename 时 latest API 会 404。旧资源名 `LifeworldTrace-*` / `Liuhen-*` / `OmniTrace-*` 仍认。
 //! 只拉 Release 的 zip（优先 `*-windows-x64-update.zip`），写入 exe 旁 `incoming\`，再走本文件 apply。
 
 use futures_util::StreamExt;
@@ -14,10 +14,10 @@ use std::time::Duration;
 use tauri::Emitter;
 
 /// 与 `omniplayer/src/shell_links.ts` 同步；禁止从非本仓库 URL 下载。
-/// 默认 Fortda/liuhen。尚未 `gh repo rename` 时检查更新会 404。
+/// 默认 Fortda/lifeworld-trace。尚未 `gh repo rename` 时检查更新会 404；仍认旧名 `liuhen`。
 const GITHUB_OWNER: &str = "Fortda";
-const GITHUB_REPO: &str = "liuhen";
-const GITHUB_REPO_LEGACY: &str = "omnitrace";
+const GITHUB_REPO: &str = "lifeworld-trace";
+const GITHUB_REPO_LEGACY: &str = "liuhen";
 
 const UPDATE_MSG: &str =
     "已准备更新，请关闭并重启 OmniPlayer（数据目录 OmniDatabase 不会被改动）";
@@ -201,13 +201,13 @@ pub fn apply_portable_update(new_exe_path: String) -> Result<String, String> {
 
     let rec_src = new_path
         .parent()
-        .map(|p| p.join("omnitrace_input.exe"))
+        .map(|p| p.join("lifeworld_trace_input.exe"))
         .filter(|p| p.is_file());
-    let rec_staging = dir.join("omnitrace_input.exe.new");
-    let rec_cur = dir.join("omnitrace_input.exe");
-    let rec_old = dir.join("omnitrace_input.exe.old");
+    let rec_staging = dir.join("lifeworld_trace_input.exe.new");
+    let rec_cur = dir.join("lifeworld_trace_input.exe");
+    let rec_old = dir.join("lifeworld_trace_input.exe.old");
     let rec_staged = if let Some(src) = rec_src {
-        let _ = fs::copy(&rec_cur, dir.join("omnitrace_input.exe.bak"));
+        let _ = fs::copy(&rec_cur, dir.join("lifeworld_trace_input.exe.bak"));
         fs::copy(&src, &rec_staging).map_err(|e| format!("复制采集程序失败：{e}"))?;
         true
     } else {
@@ -289,7 +289,11 @@ fn is_newer_version(latest: &str, current: &str) -> bool {
 }
 
 fn is_release_asset_prefix(n: &str) -> bool {
-    n.starts_with("omnitrace-") || n.starts_with("liuhen-")
+    // n 已 lower-case
+    n.starts_with("lifeworldtrace-")
+        || n.starts_with("lifeworld-trace-")
+        || n.starts_with("liuhen-")
+        || n.starts_with("omnitrace-")
 }
 
 fn is_update_zip_name(name: &str) -> bool {
@@ -354,7 +358,7 @@ fn github_api_latest_url() -> String {
 
 fn github_user_agent() -> String {
     format!(
-        "Liuhen/{} (+https://github.com/{}/{})",
+        "LifeworldTrace/{} (+https://github.com/{}/{})",
         env!("CARGO_PKG_VERSION"),
         GITHUB_OWNER,
         GITHUB_REPO
@@ -445,7 +449,7 @@ async fn fetch_latest_release() -> Result<(String, ChosenAsset), String> {
         .cloned()
         .unwrap_or_default();
     let asset = pick_zip_asset(&assets).ok_or_else(|| {
-        "此版本没有可增量安装的 zip（需要 Liuhen-*-windows-x64-update.zip 或 .zip；旧版 OmniTrace-* 也可）。首次安装请用浏览器下载 setup.exe。"
+        "此版本没有可增量安装的 zip（需要 LifeworldTrace-*-windows-x64-update.zip 或 .zip；旧版 LifeworldTrace-* 也可）。首次安装请用浏览器下载 setup.exe。"
             .to_string()
     })?;
     Ok((tag, asset))
@@ -470,12 +474,15 @@ pub async fn github_check_update() -> Result<GithubUpdateInfo, String> {
 fn dest_name_from_zip_entry(file_name: &str) -> Option<&'static str> {
     if is_omniplayer_exe_name(file_name) {
         Some("OmniPlayer.exe")
-    } else if file_name.eq_ignore_ascii_case("omnitrace_input.exe") {
-        Some("omnitrace_input.exe")
-    } else if file_name.eq_ignore_ascii_case("OmniTrace.ico")
+    } else if file_name.eq_ignore_ascii_case("lifeworld_trace_input.exe")
+        || file_name.eq_ignore_ascii_case("omnitrace_input.exe")
+    {
+        Some("lifeworld_trace_input.exe")
+    } else if file_name.eq_ignore_ascii_case("LifeworldTrace.ico")
+        || file_name.eq_ignore_ascii_case("OmniTrace.ico")
         || file_name.eq_ignore_ascii_case("icon.ico")
     {
-        Some("OmniTrace.ico")
+        Some("LifeworldTrace.ico")
     } else {
         None
     }
@@ -539,7 +546,7 @@ pub async fn github_download_update(app: tauri::AppHandle) -> Result<PendingPort
         return Err("拒绝：下载地址不是 GitHub Release".into());
     }
     if !(is_update_zip_name(&asset.name) || is_portable_zip_name(&asset.name)) {
-        return Err("拒绝：只接受 Liuhen / OmniTrace Windows zip，不会下载 setup.exe".into());
+        return Err("拒绝：只接受 Lifeworld Trace / LifeworldTrace Windows zip，不会下载 setup.exe".into());
     }
 
     let incoming = incoming_dir()?;
@@ -604,15 +611,16 @@ mod tests {
 
     #[test]
     fn zip_name_prefers_update() {
-        assert!(is_update_zip_name("OmniTrace-0.1.5-windows-x64-update.zip"));
+        assert!(is_update_zip_name("LifeworldTrace-0.1.5-windows-x64-update.zip"));
         assert!(is_update_zip_name("Liuhen-0.1.5-windows-x64-update.zip"));
-        assert!(is_portable_zip_name("OmniTrace-0.1.5-windows-x64.zip"));
+        assert!(is_update_zip_name("OmniTrace-0.1.5-windows-x64-update.zip"));
+        assert!(is_portable_zip_name("LifeworldTrace-0.1.5-windows-x64.zip"));
         assert!(is_portable_zip_name("Liuhen-0.1.5-windows-x64.zip"));
         assert!(!is_portable_zip_name(
-            "OmniTrace-0.1.5-windows-x64-update.zip"
+            "LifeworldTrace-0.1.5-windows-x64-update.zip"
         ));
         assert!(!is_update_zip_name(
-            "OmniTrace-0.1.5-windows-x64-setup.exe"
+            "LifeworldTrace-0.1.5-windows-x64-setup.exe"
         ));
         assert!(!is_portable_zip_name(
             "OmniTrace-0.1.5-windows-x64-setup.exe"
@@ -622,25 +630,25 @@ mod tests {
     #[test]
     fn url_pin_blocks_other_hosts() {
         let ok = reqwest::Url::parse(
-            "https://github.com/Fortda/liuhen/releases/download/v0.1.3/x.zip",
+            "https://github.com/Fortda/lifeworld-trace/releases/download/v0.1.3/x.zip",
         )
         .unwrap();
         assert!(github_url_allowed(&ok));
         let legacy = reqwest::Url::parse(
-            "https://github.com/Fortda/omnitrace/releases/download/v0.1.3/x.zip",
+            "https://github.com/Fortda/liuhen/releases/download/v0.1.3/x.zip",
         )
         .unwrap();
         assert!(github_url_allowed(&legacy));
         let api =
-            reqwest::Url::parse("https://api.github.com/repos/Fortda/liuhen/releases/latest")
+            reqwest::Url::parse("https://api.github.com/repos/Fortda/lifeworld-trace/releases/latest")
                 .unwrap();
         assert!(github_url_allowed(&api));
         let other =
-            reqwest::Url::parse("https://evil.example/Fortda/omnitrace/releases/download/x.zip")
+            reqwest::Url::parse("https://evil.example/Fortda/liuhen/releases/download/x.zip")
                 .unwrap();
         assert!(!github_url_allowed(&other));
         let other_repo =
-            reqwest::Url::parse("https://github.com/other/omnitrace/releases/download/x.zip")
+            reqwest::Url::parse("https://github.com/other/liuhen/releases/download/x.zip")
                 .unwrap();
         assert!(!github_url_allowed(&other_repo));
     }

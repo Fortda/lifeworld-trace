@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { webSearch } from "./search.js";
 
-const server = new McpServer({ name: "omnitrace-omni-search", version: "0.1.0" });
+const server = new McpServer({ name: "lifeworld_trace-omni-search", version: "0.1.0" });
 
 server.tool(
   "web_search",

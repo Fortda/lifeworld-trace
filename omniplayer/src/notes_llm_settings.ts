@@ -39,7 +39,7 @@ import { buildAutoPresetNoteToggle } from "./notes_wire_presets";
 import { vendorLogoHtml } from "./notes_vendor_icons";
 import { shellT } from "./shell_i18n";
 
-const SEL_LS = "omnitrace.notes.llmSettings.sel";
+const SEL_LS = "lifeworldtrace.notes.llmSettings.sel";
 
 type NavFilter = "all" | "on" | "off";
 

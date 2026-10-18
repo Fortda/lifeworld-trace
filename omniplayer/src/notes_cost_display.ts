@@ -4,9 +4,9 @@
  */
 export type CostDisplayCurrency = "USD" | "CNY";
 
-export const COST_DISPLAY_EVENT = "omnitrace-cost-display";
-const CUR_LS = "omnitrace.notes.cost.currency";
-const RATE_LS = "omnitrace.notes.cost.usdToCny";
+export const COST_DISPLAY_EVENT = "lifeworld_trace-cost-display";
+const CUR_LS = "lifeworldtrace.notes.cost.currency";
+const RATE_LS = "lifeworldtrace.notes.cost.usdToCny";
 
 /** Documented default: 1 USD = 7.2 CNY. Manual, not live FX. */
 export const DEFAULT_USD_TO_CNY = 7.2;

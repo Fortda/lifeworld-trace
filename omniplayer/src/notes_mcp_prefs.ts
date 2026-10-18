@@ -15,7 +15,7 @@ export function bindMcpContextUsageSink(sink: McpExtrasSink) {
   extrasSink = sink;
 }
 
-export const MCP_LS_KEY = "omnitrace.notes.mcp_prefs";
+export const MCP_LS_KEY = "lifeworldtrace.notes.mcp_prefs";
 
 export const SERVER_CLUE_BOARD = "clue_board";
 export const SERVER_OMNI_DATA = "omni_data";
@@ -32,6 +32,8 @@ export type McpServerToggle = {
 export type McpPrefs = {
   v: number;
   inject_product_context: boolean;
+  /** 是否注入历史对话 prior_turn_timestamps；关可更稳缓存、少占 token */
+  inject_history_timestamps: boolean;
   servers: McpServerToggle[];
 };
 
@@ -123,6 +125,7 @@ export function defaultMcpPrefs(): McpPrefs {
   return {
     v: 1,
     inject_product_context: true,
+    inject_history_timestamps: true,
     servers: defaultServers(),
   };
 }
@@ -140,6 +143,8 @@ function mergePrefs(raw: Partial<McpPrefs> | null | undefined): McpPrefs {
     v: 1,
     inject_product_context:
       raw.inject_product_context ?? base.inject_product_context,
+    inject_history_timestamps:
+      raw.inject_history_timestamps ?? base.inject_history_timestamps,
     servers: [...byId.values()],
   };
 }
@@ -160,12 +165,14 @@ export function mcpTurnOpts(extra?: {
   activeBoardId?: string | null;
 }): {
   inject_product_context: boolean;
+  inject_history_timestamps: boolean;
   enabled_server_ids: string[];
   viewing_clue_board: boolean;
   active_board_id: string | null;
 } {
   return {
     inject_product_context: mcpPrefs.inject_product_context,
+    inject_history_timestamps: mcpPrefs.inject_history_timestamps,
     enabled_server_ids: enabledMcpServerIds(),
     viewing_clue_board: Boolean(extra?.viewingClueBoard),
     active_board_id: extra?.activeBoardId?.trim() || null,
@@ -284,6 +291,17 @@ function renderMcpPopoverContent(host: HTMLElement) {
   `;
   host.appendChild(master);
 
+  const tsRow = document.createElement("label");
+  tsRow.className = "notes-mcp-row notes-mcp-master";
+  tsRow.innerHTML = `
+    <input type="checkbox" id="notes-mcp-inject-ts" ${mcpPrefs.inject_history_timestamps ? "checked" : ""} />
+    <span>
+      <strong>告诉模型历史时间戳</strong>
+      <small>每轮注入 prior_turn_timestamps；关可更稳 prompt 缓存、少占 token</small>
+    </span>
+  `;
+  host.appendChild(tsRow);
+
   const sep = document.createElement("div");
   sep.className = "notes-mcp-sep";
   host.appendChild(sep);
@@ -305,6 +323,11 @@ function renderMcpPopoverContent(host: HTMLElement) {
   master.querySelector("input")?.addEventListener("change", (e) => {
     const checked = (e.target as HTMLInputElement).checked;
     setMcpPrefs({ ...mcpPrefs, inject_product_context: checked });
+  });
+
+  tsRow.querySelector("input")?.addEventListener("change", (e) => {
+    const checked = (e.target as HTMLInputElement).checked;
+    setMcpPrefs({ ...mcpPrefs, inject_history_timestamps: checked });
   });
 
   host.querySelectorAll("[data-mcp-id]").forEach((el) => {

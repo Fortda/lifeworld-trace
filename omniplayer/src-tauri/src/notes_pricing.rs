@@ -251,7 +251,7 @@ fn insert_alias(map: &mut HashMap<String, PriceRates>, key: String, rates: Price
 async fn fetch_json(url: &str) -> Result<Value, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(40))
-        .user_agent("omnitrace-notes/0.1")
+        .user_agent("lifeworld_trace-notes/0.1")
         .build()
         .map_err(|e| e.to_string())?;
     let resp = client.get(url).send().await.map_err(|e| e.to_string())?;

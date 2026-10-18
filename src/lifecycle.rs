@@ -87,7 +87,7 @@ unsafe extern "system" fn lifecycle_wnd_proc(
             unsafe {
                 let _ = ShutdownBlockReasonCreate(
                     hwnd,
-                    windows::core::w!("OmniTrace flushing health tombstone"),
+                    windows::core::w!("LifeworldTrace flushing health tombstone"),
                 );
             }
             write_exit_tombstones(reason);
@@ -119,7 +119,7 @@ pub fn install_exit_hooks() {
     thread::Builder::new()
         .name("omni-lifecycle".into())
         .spawn(|| unsafe {
-            let class_name = windows::core::w!("OmniTraceLifecycle");
+            let class_name = windows::core::w!("LifeworldTraceLifecycle");
             let wc = WNDCLASSW {
                 style: CS_HREDRAW | CS_VREDRAW,
                 lpfnWndProc: Some(lifecycle_wnd_proc),
@@ -131,7 +131,7 @@ pub fn install_exit_hooks() {
             let hwnd = match CreateWindowExW(
                 WINDOW_EX_STYLE(WS_EX_TOOLWINDOW.0 | WS_EX_NOACTIVATE.0),
                 class_name,
-                windows::core::w!("OmniTrace-WinRecorder-Lifecycle"),
+                windows::core::w!("LifeworldTrace-WinRecorder-Lifecycle"),
                 WS_POPUP,
                 -32000,
                 -32000,

@@ -32,6 +32,7 @@ import {
   liveChunkCursor,
 } from "./bin_sync";
 import { splitJsonlChunk } from "./jsonl_tail";
+import { ingestKeyEvent, paintKeyTape, resetKeyTape } from "./player_keytape";
 
 export type RecordingDay = {
   date: string;
@@ -839,6 +840,7 @@ function paintPlayerTimeline() {
       ctx.stroke();
     }
   }
+  paintKeyTape(needleDisplayTs());
 }
 
 function needleDisplayTs() {
@@ -1155,7 +1157,7 @@ function bindPlayerTimelineFx() {
       drawPlayerTimeline();
     }
   });
-  window.addEventListener("omnitrace-theme", () => drawPlayerTimeline());
+  window.addEventListener("lifeworld_trace-theme", () => drawPlayerTimeline());
 }
 
 /** 直播 tail 状态 */
@@ -1250,6 +1252,7 @@ function resetDecoder(seedTs: number) {
   decCarry = new Uint8Array(0);
   mouseTrace = [];
   decodeFrontierTs = 0;
+  resetKeyTape();
 }
 
 function shouldKeepMouseSample(ts: number): boolean {
@@ -1294,6 +1297,10 @@ function appendBinBytes(chunk: Uint8Array) {
         return;
       }
       decTs += merged[offset];
+      if (marker === 0xfc || marker === 0xfb) {
+        const code = view.getInt16(offset + 1, false);
+        ingestKeyEvent(decTs, code, marker === 0xfc);
+      }
       offset += 3;
     } else {
       if (offset + 2 > merged.length) {
@@ -2232,6 +2239,7 @@ async function streamBinUntil(
       dec_y: number;
       carry_b64: string;
       samples: { ts: number; x: number; y: number }[];
+      keys: { ts: number; code: number; down: boolean }[];
       reached: boolean;
     };
     try {
@@ -2255,6 +2263,8 @@ async function streamBinUntil(
         dec_y: Number(raw.dec_y ?? raw.decY ?? decY),
         carry_b64: String(raw.carry_b64 ?? raw.carryB64 ?? ""),
         samples: (raw.samples as { ts: number; x: number; y: number }[]) || [],
+        keys:
+          (raw.keys as { ts: number; code: number; down: boolean }[]) || [],
         reached: !!(raw.reached ?? false),
       };
     } catch (e) {
@@ -2275,6 +2285,9 @@ async function streamBinUntil(
       for (const s of r.samples) {
         mouseTrace.push({ ts: s.ts, x: s.x, y: s.y });
       }
+    }
+    for (const k of r.keys) {
+      ingestKeyEvent(Number(k.ts), Number(k.code), !!k.down);
     }
     ticks++;
     let fileSize = stream.binTotal;
@@ -3124,7 +3137,7 @@ export function initPlayer(appWin: {
     .catch(() => {
       defaultDataRoot = "";
     });
-  window.addEventListener("omnitrace-data-root", ((ev: Event) => {
+  window.addEventListener("lifeworld_trace-data-root", ((ev: Event) => {
     const path = (ev as CustomEvent<string>).detail;
     defaultDataRoot = typeof path === "string" && path ? path : "";
     lastPlaylistRefreshedAt = 0;

@@ -6,7 +6,7 @@ export const FLOAT_MARGIN = 12;
 export const FLOAT_GAP = 8;
 export const FLOAT_MS = 180;
 
-export const MOTION_STORAGE_KEY = "omnitrace.motionStyle";
+export const MOTION_STORAGE_KEY = "lifeworldtrace.motionStyle";
 export type MotionStyle = "pop-a";
 
 export function readMotionStyle(): MotionStyle {

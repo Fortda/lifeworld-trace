@@ -90,7 +90,7 @@ pub fn run_with_args(args: &[String]) {
     #[cfg(windows)]
     crate::lifecycle::install_exit_hooks();
     if !quiet {
-        println!("WinRecorder / OmniTrace 宿主运行中（一进程多插件）。Ctrl+C、点叉、关机或 --stop 结束。");
+        println!("WinRecorder / LifeworldTrace 宿主运行中（一进程多插件）。Ctrl+C、点叉、关机或 --stop 结束。");
         println!("键鼠 bin → OmniDatabase/EventData/...");
         println!("焦点/信封 → OmniDatabase/ModuleData/...");
         println!("清单 → OmniDatabase/manifest.json");
@@ -195,12 +195,12 @@ fn stop_running() {
     #[cfg(windows)]
     {
         if let Ok(out) = Command::new("tasklist")
-            .args(["/FI", "IMAGENAME eq omnitrace_input.exe", "/FO", "CSV", "/NH"])
+            .args(["/FI", "IMAGENAME eq lifeworld_trace_input.exe", "/FO", "CSV", "/NH"])
             .output()
         {
             let text = String::from_utf8_lossy(&out.stdout);
             for line in text.lines() {
-                // "omnitrace_input.exe","1234","Session Name","Session#","Mem Usage"
+                // "lifeworld_trace_input.exe","1234","Session Name","Session#","Mem Usage"
                 let cols: Vec<&str> = line.split(',').collect();
                 if cols.len() < 2 {
                     continue;

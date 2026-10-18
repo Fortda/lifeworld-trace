@@ -129,6 +129,14 @@ pub struct BinMouseSample {
 }
 
 #[derive(Serialize)]
+pub struct BinKeySample {
+    pub ts: u64,
+    pub code: i16,
+    /// true = 按下 `0xFC`，false = 抬起 `0xFB`
+    pub down: bool,
+}
+
+#[derive(Serialize)]
 pub struct BinAdvanceResult {
     pub next_offset: u64,
     pub eof: bool,
@@ -137,6 +145,8 @@ pub struct BinAdvanceResult {
     pub dec_y: i32,
     pub carry_b64: String,
     pub samples: Vec<BinMouseSample>,
+    /// 键按下/抬起（仅 `keep_floor_ts` 之后），给播放器字条
+    pub keys: Vec<BinKeySample>,
     /// 解码时钟已到达/超过 until_ts
     pub reached: bool,
 }
@@ -251,9 +261,13 @@ fn candidate_data_roots() -> Vec<PathBuf> {
         out.push(cwd.join("..").join("..").join("..").join("OmniDatabase"));
     }
     if let Some(home) = dirs::home_dir() {
+        out.push(home.join("LifeworldTrace").join("OmniDatabase"));
+        // 旧安装：%USERPROFILE%\OmniTrace\OmniDatabase
         out.push(home.join("OmniTrace").join("OmniDatabase"));
     }
     if let Some(dl) = dirs::download_dir() {
+        out.push(dl.join("LifeworldTrace").join("OmniDatabase"));
+        out.push(dl.join("LifeworldTrace"));
         out.push(dl.join("OmniTrace").join("OmniDatabase"));
         out.push(dl.join("OmniTrace"));
     }
@@ -279,9 +293,11 @@ fn pick_existing_data_root(p: &Path, require_db_layout: bool) -> Option<PathBuf>
 }
 
 pub(crate) fn resolve_data_root() -> PathBuf {
-    if let Ok(p) = std::env::var("OMNITRACE_DATA") {
-        if let Some(hit) = pick_existing_data_root(Path::new(p.trim()), false) {
-            return hit;
+    for key in ["LIFEWORLD_TRACE_DATA", "OMNITRACE_DATA"] {
+        if let Ok(p) = std::env::var(key) {
+            if let Some(hit) = pick_existing_data_root(Path::new(p.trim()), false) {
+                return hit;
+            }
         }
     }
     if let Some(p) = read_install_data_root_pointer() {
@@ -300,7 +316,7 @@ pub(crate) fn resolve_data_root() -> PathBuf {
     }
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("OmniTrace")
+        .join("LifeworldTrace")
         .join("OmniDatabase")
 }
 
@@ -316,8 +332,9 @@ fn set_data_root(path: String) -> Result<String, String> {
     if trimmed.is_empty() {
         return Err("EMPTY_PATH".into());
     }
-    if std::env::var("OMNITRACE_DATA")
+    if std::env::var("LIFEWORLD_TRACE_DATA")
         .ok()
+        .or_else(|| std::env::var("OMNITRACE_DATA").ok())
         .is_some_and(|s| !s.trim().is_empty())
     {
         return Err("ENV_OVERRIDE".into());
@@ -505,6 +522,7 @@ fn advance_bin_decode(
             dec_y: seed_y,
             carry_b64: String::new(),
             samples: Vec::new(),
+            keys: Vec::new(),
             reached: seed_ts >= until_ts,
         });
     }
@@ -514,10 +532,12 @@ fn advance_bin_decode(
     let mut dec_x = seed_x;
     let mut dec_y = seed_y;
     let mut samples: Vec<BinMouseSample> = Vec::new();
+    let mut keys: Vec<BinKeySample> = Vec::new();
     let mut cur = offset;
     let budget = max_bytes.max(1).min(BIN_ADVANCE_MAX) as usize;
     let mut read_total = 0usize;
     const MAX_SAMPLES: usize = 6_000;
+    const MAX_KEYS: usize = 12_000;
 
     let push_sample = |ts: u64, x: i32, y: i32, samples: &mut Vec<BinMouseSample>| {
         if ts < keep_floor_ts {
@@ -595,7 +615,21 @@ fn advance_bin_decode(
                     incomplete = Some(start);
                     break;
                 }
-                dec_ts = dec_ts.saturating_add(merged[offset_i] as u64);
+                let is_key = marker == 0xfc || marker == 0xfb;
+                let next_ts = dec_ts.saturating_add(merged[offset_i] as u64);
+                if is_key && keys.len() >= MAX_KEYS && next_ts >= keep_floor_ts {
+                    incomplete = Some(start);
+                    break;
+                }
+                dec_ts = next_ts;
+                if is_key && dec_ts >= keep_floor_ts {
+                    let code = i16::from_be_bytes([merged[offset_i + 1], merged[offset_i + 2]]);
+                    keys.push(BinKeySample {
+                        ts: dec_ts,
+                        code,
+                        down: marker == 0xfc,
+                    });
+                }
                 offset_i += 3;
             } else {
                 if offset_i + 2 > merged.len() {
@@ -636,6 +670,7 @@ fn advance_bin_decode(
         dec_y,
         carry_b64: b64_encode(&carry),
         samples,
+        keys,
         reached: read_total > 0 && dec_ts >= until_ts,
     })
 }

@@ -26,7 +26,7 @@ function repoRootCandidates(): string[] {
 }
 
 export function resolveDataRoot(): string {
-  for (const key of ["OMNI_DATABASE", "OMNITRACE_DATA"]) {
+  for (const key of ["OMNI_DATABASE", "LIFEWORLD_TRACE_DATA", "OMNITRACE_DATA"]) {
     const v = process.env[key]?.trim();
     if (v) return resolve(v);
   }
@@ -34,7 +34,7 @@ export function resolveDataRoot(): string {
     const candidate = join(base, "OmniDatabase");
     if (looksLikeDb(candidate)) return resolve(candidate);
   }
-  const dl = join(homedir(), "Downloads", "OmniTrace", "OmniDatabase");
+  const dl = join(homedir(), "Downloads", "LifeworldTrace", "OmniDatabase");
   if (looksLikeDb(dl)) return dl;
   return resolve(repoRootCandidates()[0]!, "OmniDatabase");
 }

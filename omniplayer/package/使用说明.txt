@@ -6,12 +6,12 @@
   也可作自我侧写。数据只存在这台电脑上，不会上传。
 
 推荐：setup.exe
-  从 GitHub Releases 下载 Liuhen-…-windows-x64-setup.exe。
-  下一步、下一步。默认装到 %LOCALAPPDATA%\OmniTrace（当前用户，一般不用管理员；磁盘目录名未改，兼容旧版）。
+  从 GitHub Releases 下载 LifeworldTrace-…-windows-x64-setup.exe。
+  下一步、下一步。默认装到 %LOCALAPPDATA%\LifeworldTrace（当前用户，一般不用管理员；磁盘目录名未改，兼容旧版）。
   桌面和开始菜单会有「留痕」快捷方式。
 
-  程序位置：%LOCALAPPDATA%\OmniTrace
-  数据位置：%USERPROFILE%\OmniTrace\OmniDatabase
+  程序位置：%LOCALAPPDATA%\LifeworldTrace
+  数据位置：%USERPROFILE%\LifeworldTrace\OmniDatabase
   卸载（Windows 设置 → 应用 → 留痕）不会删除数据。
 
 若你拿的是 zip
@@ -22,8 +22,8 @@
 
 也可以不安装
   双击「启动 OmniPlayer.bat」。
-  没有安装指针时，数据写到用户目录下的 OmniTrace\OmniDatabase。
-  若你以前已经在「下载\OmniTrace」里有一份库，会继续用那一份。
+  没有安装指针时，数据写到用户目录下的 LifeworldTrace\OmniDatabase。
+  若你以前已经在「下载\LifeworldTrace」里有一份库，会继续用那一份。
 
 Windows 提示「未知应用 / 已保护你的电脑」
   安装包目前没有代码签名。选「更多信息」→「仍要运行」。
@@ -38,7 +38,7 @@ Windows 提示「未知应用 / 已保护你的电脑」
 
 ---
 
-Liuhen (Windows)
+Lifeworld Trace (Windows)
 ================
 
 What this is
@@ -46,18 +46,18 @@ What this is
   A form of self-profiling. Data stays on this computer. Nothing is uploaded.
 
 Recommended: setup.exe
-  Download Liuhen-…-windows-x64-setup.exe from GitHub Releases.
-  Next, Next, Next. Default: %LOCALAPPDATA%\OmniTrace (per-user, usually no admin; folder name unchanged).
-  App: %LOCALAPPDATA%\OmniTrace
-  Data: %USERPROFILE%\OmniTrace\OmniDatabase
-  Uninstalling the app (Settings → Apps → 留痕 / Liuhen) does not delete your data.
+  Download LifeworldTrace-…-windows-x64-setup.exe from GitHub Releases.
+  Next, Next, Next. Default: %LOCALAPPDATA%\LifeworldTrace (per-user, usually no admin; folder name unchanged).
+  App: %LOCALAPPDATA%\LifeworldTrace
+  Data: %USERPROFILE%\LifeworldTrace\OmniDatabase
+  Uninstalling the app (Settings → Apps → 留痕 / Lifeworld Trace) does not delete your data.
 
 If you have the zip
   Unzip the whole folder, then run 安装到本机.bat (Install on this PC).
 
 Run without installing
   Double-click 启动 OmniPlayer.bat. Data goes under your user folder
-  OmniTrace\OmniDatabase unless an older library already exists.
+  LifeworldTrace\OmniDatabase unless an older library already exists.
 
 Windows SmartScreen
   The build is unsigned. More info → Run anyway.

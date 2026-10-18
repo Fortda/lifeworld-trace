@@ -11,7 +11,7 @@ fn main() {
     let mut file = File::open(&filename).expect("找不到今天的数据文件！");
     
     let mut buffer = [0u8; 1];
-    println!("📡 OmniTrace V2 解码器监听中 (按 Ctrl+C 停止)...\n");
+    println!("📡 LifeworldTrace V2 解码器监听中 (按 Ctrl+C 停止)...\n");
     
     loop {
         match file.read_exact(&mut buffer) {

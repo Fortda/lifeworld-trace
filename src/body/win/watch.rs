@@ -17,7 +17,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WNDCLASSW, WS_POPUP,
 };
 
-const CLASS: PCWSTR = w!("OmniTraceBodyWatch");
+const CLASS: PCWSTR = w!("LifeworldTraceBodyWatch");
 
 pub fn spawn(shared: Arc<BodyShared>) -> Result<JoinHandle<()>, String> {
     thread::Builder::new()

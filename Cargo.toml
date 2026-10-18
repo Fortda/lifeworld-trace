@@ -1,16 +1,16 @@
 [package]
-name = "omnitrace_input"
+name = "lifeworld_trace_input"
 version = "0.2.0"
 edition = "2024"
-description = "Liuhen recorder with pluggable modules"
-default-run = "omnitrace_input"
+description = "Lifeworld Trace recorder with pluggable modules"
+default-run = "lifeworld_trace_input"
 
 [lib]
-name = "omnitrace"
+name = "lifeworld_trace"
 path = "src/lib.rs"
 
 [[bin]]
-name = "omnitrace_input"
+name = "lifeworld_trace_input"
 path = "src/main.rs"
 
 [[bin]]

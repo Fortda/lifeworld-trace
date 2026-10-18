@@ -2,7 +2,7 @@
 
 import type { StringTable } from "./shell_i18n_tables";
 
-export const CALIBER_PLAIN_STORAGE_KEY = "omnitrace.shell.caliber_plain";
+export const CALIBER_PLAIN_STORAGE_KEY = "lifeworld_trace.shell.caliber_plain";
 
 export function isCaliberPlainMode(): boolean {
   try {

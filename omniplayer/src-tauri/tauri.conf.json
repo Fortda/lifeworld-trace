@@ -3,7 +3,7 @@
   "productName": "留痕",
   "mainBinaryName": "OmniPlayer",
   "version": "0.1.5",
-  "identifier": "com.fortd.omnitrace",
+  "identifier": "com.fortd.lifeworldtrace",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:1420",
@@ -41,8 +41,8 @@
   "bundle": {
     "active": false,
     "targets": [],
-    "shortDescription": "Liuhen recording player",
-    "longDescription": "Replay mouse, keyboard and window context captured by Liuhen (留痕). Friend setup.exe is built from omniplayer/package/omnitrace.nsi (player + recorder, per-user).",
+    "shortDescription": "Lifeworld Trace recording player",
+    "longDescription": "Replay mouse, keyboard and window context captured by Lifeworld Trace (留痕). Friend setup.exe is built from omniplayer/package/lifeworld_trace.nsi (player + recorder, per-user).",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

@@ -10,8 +10,8 @@ import {
 } from "./omni_float";
 import { shellT } from "./shell_i18n";
 
-export const COLOR_TEMP_STORAGE_KEY = "omnitrace.notes.colorTemp";
-export const SHOW_BACKSPACE_STORAGE_KEY = "omnitrace.notes.showBackspace";
+export const COLOR_TEMP_STORAGE_KEY = "lifeworldtrace.notes.colorTemp";
+export const SHOW_BACKSPACE_STORAGE_KEY = "lifeworldtrace.notes.showBackspace";
 
 const COLOR_DT_WARM_MS = 50;
 const COLOR_DT_COLD_MS = 950;
@@ -144,6 +144,18 @@ export function sketchFromGlyphs(glyphs: StreamGlyph[]): string {
   return glyphs.filter((g) => !g.deleted).map((g) => g.ch).join("");
 }
 
+/** 输入框里实际排版的字符串：退格灰显开时，删掉的字也占一格。 */
+function fieldValue(glyphs: StreamGlyph[]): string {
+  if (!showBackspaceOn) return sketchFromGlyphs(glyphs);
+  return glyphs.map((g) => g.ch).join("");
+}
+
+function utf16Len(chars: string[]): number {
+  let n = 0;
+  for (const ch of chars) n += ch.length;
+  return n;
+}
+
 function dtToRgb(dtMs: number): string {
   const t = Math.min(
     1,
@@ -209,6 +221,71 @@ export function syncGlyphListToText(
   return next;
 }
 
+/**
+ * 退格灰显开着时，输入框字符串含灰色删字。
+ * 删掉的实字留在原位并标 deleted（仍占格）；再退一格才去掉灰字。
+ * 新插入的字排在这些灰字前面，不盖住它们。
+ * caret 为 UTF-16 下标；-1 表示不必改光标。
+ */
+function syncGlyphsKeepingDeleted(
+  glyphs: StreamGlyph[],
+  text: string,
+  dtMs: number,
+  now: number
+): { glyphs: StreamGlyph[]; caret: number } {
+  const old = glyphs.map((g) => g.ch).join("");
+  if (old === text) return { glyphs, caret: -1 };
+
+  const chars = [...text];
+  let pre = 0;
+  const maxPre = Math.min(glyphs.length, chars.length);
+  while (pre < maxPre && glyphs[pre].ch === chars[pre]) pre += 1;
+
+  let suf = 0;
+  while (
+    suf < glyphs.length - pre &&
+    suf < chars.length - pre &&
+    glyphs[glyphs.length - 1 - suf].ch === chars[chars.length - 1 - suf]
+  ) {
+    suf += 1;
+  }
+
+  const removed = glyphs.slice(pre, glyphs.length - suf);
+  const inserted = chars.slice(pre, chars.length - suf);
+  const mid: StreamGlyph[] = [];
+  for (const ch of inserted) {
+    mid.push({ ch, dtMs, ts: now });
+  }
+  for (const g of removed) {
+    if (g.deleted) continue;
+    mid.push({ ...g, deleted: true });
+  }
+
+  let next = [
+    ...glyphs.slice(0, pre).map((g) => ({ ...g })),
+    ...mid,
+    ...glyphs.slice(glyphs.length - suf).map((g) => ({ ...g })),
+  ];
+  if (next.length > MAX_GLYPHS) next = next.slice(next.length - MAX_GLYPHS);
+
+  const caret =
+    utf16Len(glyphs.slice(0, pre).map((g) => g.ch)) + inserted.join("").length;
+  return { glyphs: next, caret };
+}
+
+function placeFieldText(
+  input: HTMLTextAreaElement,
+  glyphs: StreamGlyph[],
+  caret: number
+) {
+  const next = fieldValue(glyphs);
+  if (input.value !== next) input.value = next;
+  if (caret >= 0) {
+    const c = Math.max(0, Math.min(caret, next.length));
+    input.setSelectionRange(c, c);
+  }
+}
+
 export function fillUserTextEl(
   el: HTMLElement,
   text: string,
@@ -230,8 +307,23 @@ export function fillUserTextEl(
   renderGlyphTapeInto(el, list);
 }
 
-function syncGlyphsToText(text: string, dtMs: number, now: number) {
+function syncGlyphsToText(text: string, dtMs: number, now: number, caretOut?: { caret: number }) {
+  if (showBackspaceOn) {
+    const synced = syncGlyphsKeepingDeleted(liveGlyphs, text, dtMs, now);
+    liveGlyphs = synced.glyphs;
+    if (caretOut) caretOut.caret = synced.caret;
+    return;
+  }
   liveGlyphs = syncGlyphListToText(liveGlyphs, text, dtMs, now);
+  if (caretOut) caretOut.caret = -1;
+}
+
+/** 发给模型 / 存成正文的字：不含退格灰字。 */
+export function composerSemanticText(): string {
+  const input = $("notes-input") as HTMLTextAreaElement | null;
+  if (!showBackspaceOn) return input?.value ?? sketchFromGlyphs(liveGlyphs);
+  if (!liveGlyphs.length) return input?.value ?? "";
+  return sketchFromGlyphs(liveGlyphs);
 }
 
 export function onComposerInput() {
@@ -240,7 +332,9 @@ export function onComposerInput() {
   const now = Date.now();
   const dt = lastLiveTs ? now - lastLiveTs : 0;
   lastLiveTs = now;
-  syncGlyphsToText(input.value, dt, now);
+  const caret = { caret: -1 };
+  syncGlyphsToText(input.value, dt, now, caret);
+  if (showBackspaceOn) placeFieldText(input, liveGlyphs, caret.caret);
   paintComposerTape();
 }
 
@@ -258,11 +352,21 @@ export function paintComposerTape() {
     tape.replaceChildren();
     return;
   }
-  if (sketchFromGlyphs(liveGlyphs) !== input.value) {
-    syncGlyphsToText(input.value, 0, Date.now());
+  if (!showBackspaceOn) {
+    const plain = sketchFromGlyphs(liveGlyphs);
+    if (input.value !== plain) input.value = plain;
+  } else if (
+    sketchFromGlyphs(liveGlyphs) === input.value &&
+    fieldValue(liveGlyphs) !== input.value
+  ) {
+    placeFieldText(input, liveGlyphs, -1);
+  } else if (fieldValue(liveGlyphs) !== input.value) {
+    const caret = { caret: -1 };
+    syncGlyphsToText(input.value, 0, Date.now(), caret);
+    placeFieldText(input, liveGlyphs, caret.caret);
   }
   const showDeleted = liveGlyphs.some((g) => g.deleted && showBackspaceOn);
-  if (!input.value && !showDeleted) {
+  if (!fieldValue(liveGlyphs) && !showDeleted) {
     tape.replaceChildren();
     return;
   }
@@ -272,7 +376,11 @@ export function paintComposerTape() {
 }
 
 export function snapshotGlyphsForSend(text: string): UserGlyphWire[] {
-  syncGlyphsToText(text, 0, Date.now());
+  const input = $("notes-input") as HTMLTextAreaElement | null;
+  const source = showBackspaceOn && input ? input.value : text;
+  if (fieldValue(liveGlyphs) !== source) {
+    syncGlyphsToText(source, 0, Date.now());
+  }
   return glyphsToWire(liveGlyphs);
 }
 
@@ -478,6 +586,8 @@ function bindAnchorButton(btn: HTMLElement | null) {
 export type GlyphFieldHandle = {
   onInput: () => void;
   paint: () => void;
+  /** 不含退格灰字的正文。 */
+  semantic: () => string;
   snapshot: () => UserGlyphWire[];
   setGlyphs: (raw: unknown) => void;
   destroy: () => void;
@@ -508,10 +618,17 @@ export function attachGlyphField(opts: {
       tape.replaceChildren();
       return;
     }
-    if (sketchFromGlyphs(glyphs) !== input.value) {
-      glyphs = syncGlyphListToText(glyphs, input.value, 0, Date.now());
+    if (!showBackspaceOn) {
+      const plain = sketchFromGlyphs(glyphs);
+      if (input.value !== plain) input.value = plain;
+    } else if (sketchFromGlyphs(glyphs) === input.value && fieldValue(glyphs) !== input.value) {
+      placeFieldText(input, glyphs, -1);
+    } else if (fieldValue(glyphs) !== input.value) {
+      const synced = syncGlyphsKeepingDeleted(glyphs, input.value, 0, Date.now());
+      glyphs = synced.glyphs;
+      placeFieldText(input, glyphs, -1);
     }
-    if (!input.value && !glyphs.some((g) => g.deleted && showBackspaceOn)) {
+    if (!fieldValue(glyphs) && !glyphs.some((g) => g.deleted && showBackspaceOn)) {
       tape.replaceChildren();
       return;
     }
@@ -525,7 +642,13 @@ export function attachGlyphField(opts: {
     const now = Date.now();
     const dt = lastTs ? now - lastTs : 0;
     lastTs = now;
-    glyphs = syncGlyphListToText(glyphs, input.value, dt, now);
+    if (showBackspaceOn) {
+      const synced = syncGlyphsKeepingDeleted(glyphs, input.value, dt, now);
+      glyphs = synced.glyphs;
+      placeFieldText(input, glyphs, synced.caret);
+    } else {
+      glyphs = syncGlyphListToText(glyphs, input.value, dt, now);
+    }
     paint();
     opts.onChange?.(glyphsToWire(glyphs));
   };
@@ -552,6 +675,7 @@ export function attachGlyphField(opts: {
   return {
     onInput,
     paint,
+    semantic: () => sketchFromGlyphs(glyphs),
     snapshot: () => glyphsToWire(glyphs),
     setGlyphs: (raw) => {
       glyphs = normalizeGlyphs(raw);
@@ -575,7 +699,7 @@ export function initColorTempUi(opts?: { onDisplayChange?: () => void }) {
   bindComposerField();
   syncColorTempChrome();
   paintComposerTape();
-  window.addEventListener("omnitrace-lang", () => syncColorTempChrome());
+  window.addEventListener("lifeworld_trace-lang", () => syncColorTempChrome());
 }
 
 /** 线索板工具栏按钮晚于 init 插入时再绑一次。 */

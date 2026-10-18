@@ -6,7 +6,7 @@ import { z } from "zod";
 import { dashUiPath } from "./paths.js";
 import { applyUniquePatch } from "./patch.js";
 
-const server = new McpServer({ name: "omnitrace-omni-dash-ui", version: "0.1.0" });
+const server = new McpServer({ name: "lifeworld_trace-omni-dash-ui", version: "0.1.0" });
 const fileId = z.enum([
   "dashboard_ts",
   "dashboard_status_ts",

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { resolveDataRoot } from "./paths.js";
 import { artifactPath, assertArtifactSize } from "./safe_path.js";
 
-const server = new McpServer({ name: "omnitrace-omni-artifact", version: "0.1.0" });
+const server = new McpServer({ name: "lifeworld_trace-omni-artifact", version: "0.1.0" });
 
 server.tool(
   "write_artifact",

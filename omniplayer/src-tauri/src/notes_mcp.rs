@@ -38,6 +38,9 @@ pub struct McpPrefs {
     /// 是否注入「与本软件有关」的短架构摘要
     #[serde(default = "default_true")]
     pub inject_product_context: bool,
+    /// 是否注入历史对话 `[prior_turn_timestamps]`（关可更稳 prompt 缓存、少占 token）
+    #[serde(default = "default_true")]
+    pub inject_history_timestamps: bool,
     #[serde(default = "default_servers")]
     pub servers: Vec<McpServerToggle>,
 }
@@ -76,6 +79,7 @@ impl Default for McpPrefs {
         Self {
             v: 1,
             inject_product_context: true,
+            inject_history_timestamps: true,
             servers: default_servers(),
         }
     }
@@ -167,7 +171,7 @@ pub fn any_mcp_enabled(prefs: &McpPrefs) -> bool {
 pub fn product_context_system_message() -> String {
     let root = resolve_data_root();
     format!(
-        "You are assisting inside 留痕 / Liuhen (OmniPlayer shell). Data root: {}. \
+        "You are assisting inside 留痕 / Lifeworld Trace (OmniPlayer shell). Data root: {}. \
 You may use tools only within their documented scope. \
 Do NOT edit .cursor/ARCHITECTURE_BLUEPRINT.md directly — use write_adr_draft or write_arch_suggestion instead. \
 Dashboard UI edits are limited to stats/live/sleep front-end files. \

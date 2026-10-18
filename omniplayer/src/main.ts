@@ -6,7 +6,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
-import { openPath, openUrl } from "@tauri-apps/plugin-opener";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { initTheme } from "./theme";
 import { initMotionStyle } from "./omni_float";
 import { initLang, shellT } from "./shell_i18n";
@@ -234,7 +234,7 @@ async function focusNotesWindow() {
 /** 回退值；运行时优先用 getVersion()（与 tauri.conf.json 对齐）。 */
 let APP_VERSION = "0.1.5";
 
-const UPDATE_LAUNCH_KEY = "omnitrace.update.checkOnLaunch.v1";
+const UPDATE_LAUNCH_KEY = "lifeworld_trace.update.checkOnLaunch.v1";
 
 type GithubUpdateInfo = {
   current_version: string;
@@ -410,7 +410,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   function notifyDataRootChanged(path: string) {
     window.dispatchEvent(
-      new CustomEvent("omnitrace-data-root", { detail: path })
+      new CustomEvent("lifeworld_trace-data-root", { detail: path })
     );
   }
 
@@ -442,7 +442,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         showSettingsToast(shellT("settings.data.err.open"));
         return;
       }
-      await openPath(path);
+      // reveal 走 Shell 宽字符 API，中文路径能弹出资源管理器；openPath 经 cmd start 会丢编码。
+      await revealItemInDir(path);
     } catch (e) {
       showSettingsToast(shellT("settings.data.err.open"));
       console.error(e);
@@ -654,7 +655,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       window.setTimeout(() => scrollCaliberAnchor(anchor), 80);
     }
   };
-  window.addEventListener("omnitrace-open-llm-settings", () => {
+  window.addEventListener("lifeworld_trace-open-llm-settings", () => {
     openLlmSettings();
   });
 
@@ -885,7 +886,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   void resolveAppVersion().then(() => {
     if (!lastUpdateInfo) renderUpdateMeta(null);
   });
-  window.addEventListener("omnitrace-lang", () => {
+  window.addEventListener("lifeworld_trace-lang", () => {
     renderUpdateMeta(lastUpdateInfo);
   });
   if (!SHELL_NOTES && readLaunchCheck()) {
@@ -976,7 +977,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   moveNavPill();
   window.addEventListener("resize", () => moveNavPill());
-  window.addEventListener("omnitrace-lang", () => {
+  window.addEventListener("lifeworld_trace-lang", () => {
     requestAnimationFrame(() => {
       moveNavPill();
       requestAnimationFrame(() => moveNavPill());

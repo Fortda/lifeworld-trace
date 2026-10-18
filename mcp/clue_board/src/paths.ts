@@ -28,7 +28,11 @@ function repoRootCandidates(): string[] {
 }
 
 export function resolveDataRoot(): string {
-  for (const key of ["OMNI_DATABASE", "OMNITRACE_DATA"]) {
+  for (const key of [
+    "OMNI_DATABASE",
+    "LIFEWORLD_TRACE_DATA",
+    "OMNITRACE_DATA",
+  ]) {
     const v = process.env[key]?.trim();
     if (v) return resolve(v);
   }
@@ -38,11 +42,17 @@ export function resolveDataRoot(): string {
     if (looksLikeDb(candidate)) return resolve(candidate);
   }
 
-  const userOmni = join(homedir(), "OmniTrace", "OmniDatabase");
+  const userOmni = join(homedir(), "LifeworldTrace", "OmniDatabase");
   if (looksLikeDb(userOmni) || existsSync(userOmni)) return userOmni;
 
-  const dl = join(homedir(), "Downloads", "OmniTrace", "OmniDatabase");
+  const userLegacy = join(homedir(), "OmniTrace", "OmniDatabase");
+  if (looksLikeDb(userLegacy) || existsSync(userLegacy)) return userLegacy;
+
+  const dl = join(homedir(), "Downloads", "LifeworldTrace", "OmniDatabase");
   if (looksLikeDb(dl)) return dl;
+
+  const dlLegacy = join(homedir(), "Downloads", "OmniTrace", "OmniDatabase");
+  if (looksLikeDb(dlLegacy)) return dlLegacy;
 
   // Fallback: repo OmniDatabase even if empty (MCP can create notes/config)
   return resolve(repoRootCandidates()[0]!, "OmniDatabase");

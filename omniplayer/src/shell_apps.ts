@@ -41,8 +41,8 @@ import {
   getSelectedWirePresetId,
 } from "./notes_wire_presets";
 
-export const APPS_STORAGE_KEY = "omnitrace.shell.apps.v1";
-const FILE_ROOT_KEY = "omnitrace.shell.apps.fileRoot";
+export const APPS_STORAGE_KEY = "lifeworld_trace.shell.apps.v1";
+const FILE_ROOT_KEY = "lifeworld_trace.shell.apps.fileRoot";
 
 export type AppsPaneKind =
   | "chat"
@@ -1795,7 +1795,7 @@ export function initShellApps(notesLoader: NotesLoader) {
   const handle = $("shell-apps-resize");
   if (handle) bindResize(handle);
 
-  window.addEventListener("omnitrace-lang", () => refreshI18n());
+  window.addEventListener("lifeworld_trace-lang", () => refreshI18n());
   window.addEventListener(CLUE_BOARDS_UI_EVENT, () => {
     pruneMissingInstances("clue");
     if (cluePickerEl && !cluePickerEl.classList.contains("hidden")) {

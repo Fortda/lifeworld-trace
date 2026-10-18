@@ -1,4 +1,4 @@
-//! OmniTrace 核心库：进程内插件（像游戏 mod），不是多开几个 exe。
+//! LifeworldTrace 核心库：进程内插件（像游戏 mod），不是多开几个 exe。
 //!
 //! - 一个宿主进程里挂多个插件（input / focus / 以后 win_map…）
 //! - 共享同一套 UTC 毫秒时钟
