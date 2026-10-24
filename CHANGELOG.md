@@ -4,9 +4,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- OmniPlayer 桌面壳接入 Tauri 官方 updater：已安装副本在启动时对照 GitHub Release 的 `latest.json`，确认后下载并安装签名过的完整 NSIS（播放器 + 采集器）。便携 zip 只提示去发布页。签名私钥走 GitHub Secrets `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`，公钥在 `tauri.conf.json`。发版步骤见 `docs/releasing.md`。
+
 ### Changed
 
-- 英文名由 Liuhen / OmniTrace 统一为 **Lifeworld Trace**（路径与包名用无空格的 `LifeworldTrace` / `lifeworld_trace_*`）。默认程序目录 `%LOCALAPPDATA%\LifeworldTrace`，数据目录 `%USERPROFILE%\LifeworldTrace\OmniDatabase`；仍识别旧 `%USERPROFILE%\OmniTrace` 与环境变量 `OMNITRACE_DATA`。公开仓库改为 <https://github.com/Fortda/lifeworld-trace>（旧 `Fortda/liuhen` 仍作更新 URL 兼容）。采集 exe 现为 `lifeworld_trace_input.exe`（旁路旧 `omnitrace_input.exe` 仍可启动）。Android 工程目录 `lifeworld_trace_android/`，包名 `com.lifeworldtrace.android`。
+- 英文名由 Liuhen / OmniTrace 统一为 **Lifeworld Trace**（路径与包名用无空格的 `LifeworldTrace` / `lifeworld_trace_*`）。默认程序目录 `%LOCALAPPDATA%\LifeworldTrace`，数据目录 `%USERPROFILE%\LifeworldTrace\OmniDatabase`；仍识别旧 `%USERPROFILE%\OmniTrace` 与环境变量 `OMNITRACE_DATA`。公开仓库改为 <https://github.com/Fortda/lifeworld-trace>。采集 exe 现为 `lifeworld_trace_input.exe`（旁路旧 `omnitrace_input.exe` 仍可启动）。Android 工程目录 `lifeworld_trace_android/`，包名 `com.lifeworldtrace.android`。
+- Windows 自动更新改为完整安装包。Tauri 官方 updater 没有可交付的二进制差分，因此不再把 `*-windows-x64-update.zip` 当作更新通道；便携 zip 与 setup.exe 仍会挂到 Release。清单与安装包地址使用 `Fortda/lifeworld-trace`。
+
+### Fixed
+
+- MCP `omni_arch`：补上快照改名时丢掉的 `McpServer` 实例，使 `tsc` 能通过。
 
 ## [0.1.5] - 2026-09-22
 
